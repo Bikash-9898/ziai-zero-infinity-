@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../context/useAuth';
 import { 
   Send, 
   Image as ImageIcon, 
@@ -12,6 +13,7 @@ import {
 const ClientDashboard = () => {
   const [activeTab, setActiveTab] = useState<'chat' | 'image'>('chat');
   const [input, setInput] = useState('');
+  const { user, logout } = useAuth();
 
   return (
     <div className="flex h-screen bg-[#05070a] text-slate-100 font-sans">
@@ -67,7 +69,10 @@ const ClientDashboard = () => {
             <Settings size={18} />
             <span className="text-sm font-medium">Settings</span>
           </button>
-          <button className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-500/5 rounded-lg transition-colors">
+          <button 
+            onClick={logout}
+            className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:bg-red-500/5 rounded-lg transition-colors"
+          >
             <LogOut size={18} />
             <span className="text-sm font-medium">Logout</span>
           </button>
@@ -82,6 +87,9 @@ const ClientDashboard = () => {
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <h2 className="text-sm font-semibold text-slate-300">
               {activeTab === 'chat' ? 'VIRTUAL ASSISTANT v2.4' : 'IMAGE ENGINE'}
+            </h2>
+            <h2 className="text-sm font-semibold text-slate-300">
+              {user?.username ? `WELCOME, ${user.username.toUpperCase()}` : 'SYSTEM READY'}
             </h2>
           </div>
           <div className="flex items-center gap-6">

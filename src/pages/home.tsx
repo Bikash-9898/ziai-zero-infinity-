@@ -1,10 +1,11 @@
 import { useState } from 'react';
 // import { Link } from 'react-router-dom'
 import SignInModal from '../components/SignInModal';
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { useAuth } from '../context/useAuth';
 
 
-const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
+export const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
+  const { user, logout } = useAuth();
   return (
     <nav className="fixed top-0 left-0 right-0 z-999 bg-[#0b0b1a]/70 backdrop-blur-xl border-b border-white/5 px-6 py-3">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -45,12 +46,20 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
               Sign In
             </Link>
           </button> */}
-          <button 
+          {/* <button 
             onClick={onSignInClick}// Open Function
             className="text-gray-400 hover:text-white transition-colors cursor-pointer"
           >
             Sign In
-          </button>
+          </button> */}
+          {user ? (
+            <div className="flex items-center gap-4">
+              <span>Hi, {user.username}</span>
+              <button onClick={logout}>Logout</button>
+            </div>
+          ) : (
+            <button onClick={onSignInClick}>Sign In</button>
+          )}
           <button className="px-5 py-2.5 rounded-full bg-white text-black text-sm font-bold hover:bg-purple-50 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
             Get Started
           </button>
@@ -71,7 +80,6 @@ export default function Dashboard() {
   const [isSignInOpen, setIsSignInOpen] = useState(false);
 
   return (
-    <GoogleOAuthProvider clientId="201164829072-ge4gi27vgbb9jaaava23ob0kbu9nc0cb.apps.googleusercontent.com">
     <div className="min-h-screen bg-[#06060c] text-white font-sans selection:bg-purple-500/30">
       <Navbar onSignInClick={() => setIsSignInOpen(true)} />
 
@@ -189,6 +197,5 @@ export default function Dashboard() {
         </div>
       </footer>
     </div>
-    </GoogleOAuthProvider>
   );
 }
