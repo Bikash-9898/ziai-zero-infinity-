@@ -1,7 +1,7 @@
 import { useState } from 'react';
 // import { Link } from 'react-router-dom'
-import SignInModal from '../components/SignInModal';
-import { useAuth } from '../context/useAuth';
+import SignInModal from '@/components/SignInModal';
+import { useAuth } from '@/context/useAuth';
 
 
 export const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {

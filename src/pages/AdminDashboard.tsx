@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 
 import { LayoutDashboard, Users, Key, LogOut } from 'lucide-react';
-import type { User } from '../types'; // Ensure User is imported/defined
-import UserTable from '../components/UserTable';
-import AdminOverview from '../components/AdminOverview';
-// import { useAuth } from '../context/useAuth';
+import type { User } from '@/types/types'; // Ensure User is imported/defined
+import UserTable from '@/components/UserTable';
+import AdminOverview from '@/components/AdminOverview';
+// import { useAuth } from '@/context/useAuth';
 
 const AdminDashboard = () => {
   const [activeView, setActiveView] = useState<string>('overview');
