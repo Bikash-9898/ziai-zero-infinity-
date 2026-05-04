@@ -1,199 +1,178 @@
-import React, { useEffect, useState } from "react";
-import PlanCard from "../components/billing/PlanCard";
-import PaymentModal from "../components/billing/PaymentModal";
-import { fetchPlans, fetchBillingHistory, type Plan } from "../api/billing";
-import { useUsage } from "../hooks/useUsage";
+// Billing API client for React frontend
+// Provides functions to interact with the backend billing and usage APIs
+const API = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString("en-NP", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export interface PlanInfo {
+  plan: string;
+  tokens_per_month: number;
+  requests_per_month: number;
+  image_generations_per_month: number;
+  price_npr: number;
+  is_unlimited: boolean;
 }
 
-const STATUS_STYLE: Record<string, string> = {
-  success: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
-  pending: "bg-amber-500/15 text-amber-400 border-amber-500/20",
-  failed: "bg-red-500/15 text-red-400 border-red-500/20",
-};
+export interface PlanComparison extends PlanInfo {
+  is_current: boolean;
+  action: "current" | "upgrade" | "downgrade";
+}
 
-const Billing: React.FC = () => {
-  const { subscription, refetch: refetchUsage } = useUsage();
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [history, setHistory] = useState<
-    {
-      id: string;
-      plan: string;
-      amount: number;
-      method: string;
-      status: string;
-      created_at: string;
-    }[]
-  >([]);
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [loadingPlans, setLoadingPlans] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export interface SubscriptionResponse {
+  id: string;
+  user_id: string;
+  plan: string;
+  status: string;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  created_at: string;
+}
 
-  useEffect(() => {
-    Promise.all([fetchPlans(), fetchBillingHistory()])
-      .then(([p, h]) => {
-        setPlans(p);
-        setHistory(h);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoadingPlans(false));
-  }, []);
+export interface PaymentRecord {
+  id: string;
+  user_id: string;
+  provider: string;
+  plan: string;
+  amount: number;
+  currency: string;
+  status: string;
+  transaction_id: string | null;
+  verified_at: string | null;
+  created_at: string;
+}
 
-  const handlePaymentSuccess = () => {
-    setSelectedPlan(null);
-    refetchUsage();
+export interface BillingStatus {
+  user_id: string;
+  current_plan: string;
+  is_active: boolean;
+  subscription: {
+    status: string | null;
+    period_start: string | null;
+    period_end: string | null;
   };
+  last_payment: {
+    provider: string | null;
+    amount: string | null;
+    date: string | null;
+  };
+}
 
-  const currentPlan = subscription?.plan ?? "free";
+export interface UsageResponse {
+  user_id: string;
+  plan: string;
+  tokens_used: number;
+  tokens_limit: number;
+  requests_used: number;
+  requests_limit: number;
+  images_used: number;
+  images_limit: number;
+  period_start: string;
+  period_end: string;
+  percent_tokens_used: number | null;
+  percent_requests_used: number | null;
+}
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-white p-6 md:p-10">
-      <div className="max-w-5xl mx-auto space-y-12">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-black tracking-tight">Billing & Plans</h1>
-          <p className="text-slate-400 mt-1.5 text-sm">
-            Manage your subscription and payment history
-          </p>
-        </div>
+export interface AiRequestRecord {
+  id: string;
+  user_id: string;
+  model: string;
+  tokens_input: number | null;
+  tokens_output: number | null;
+  total_tokens: number;
+  cost: number | null;
+  latency_ms: number | null;
+  status: string;
+  created_at: string;
+}
 
-        {/* Current Plan Banner */}
-        {subscription && (
-          <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-lg">
-                ◈
-              </div>
-              <div>
-                <p className="text-white font-bold capitalize">
-                  {subscription.plan} Plan
-                </p>
-                <p className="text-slate-400 text-sm">
-                  Renews{" "}
-                  {subscription.current_period_end
-                    ? formatDate(subscription.current_period_end)
-                    : "—"}
-                </p>
-              </div>
-            </div>
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                subscription.status === "active"
-                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/20"
-                  : "bg-slate-600/30 text-slate-400 border-slate-600/30"
-              }`}
-            >
-              {subscription.status}
-            </span>
-          </div>
-        )}
+export interface UsageHistoryResponse {
+  requests: AiRequestRecord[];
+  total: number;
+  page: number;
+  page_size: number;
+}
 
-        {/* Plans */}
-        {error ? (
-          <p className="text-red-400 text-sm">{error}</p>
-        ) : loadingPlans ? (
-          <div className="text-slate-400 text-sm flex items-center gap-2">
-            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
-            Loading plans…
-          </div>
-        ) : (
-          <div>
-            <h2 className="text-slate-300 font-semibold text-sm uppercase tracking-widest mb-6">
-              Available Plans
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              {plans.map((plan) => (
-                <PlanCard
-                  key={plan.id}
-                  plan={plan}
-                  currentPlan={currentPlan}
-                  onSelect={setSelectedPlan}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+export interface UsageSummaryResponse {
+  daily_tokens: { date: string; tokens: number; requests: number }[];
+  top_models: { model: string; count: number; tokens: number }[];
+  total_cost: number;
+  avg_latency_ms: number | null;
+}
 
-        {/* Billing History */}
-        {history.length > 0 && (
-          <div>
-            <h2 className="text-slate-300 font-semibold text-sm uppercase tracking-widest mb-4">
-              Payment History
-            </h2>
-            <div className="bg-slate-800/50 border border-slate-700/40 rounded-2xl overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-700/40">
-                    <th className="text-left text-slate-500 font-medium px-5 py-3">
-                      Date
-                    </th>
-                    <th className="text-left text-slate-500 font-medium px-5 py-3">
-                      Plan
-                    </th>
-                    <th className="text-left text-slate-500 font-medium px-5 py-3">
-                      Method
-                    </th>
-                    <th className="text-right text-slate-500 font-medium px-5 py-3">
-                      Amount
-                    </th>
-                    <th className="text-right text-slate-500 font-medium px-5 py-3">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((h) => (
-                    <tr
-                      key={h.id}
-                      className="border-b border-slate-700/20 last:border-0 hover:bg-slate-700/20 transition-colors"
-                    >
-                      <td className="px-5 py-3 text-slate-300">
-                        {formatDate(h.created_at)}
-                      </td>
-                      <td className="px-5 py-3 text-slate-300 capitalize">
-                        {h.plan}
-                      </td>
-                      <td className="px-5 py-3 text-slate-400 capitalize">
-                        {h.method}
-                      </td>
-                      <td className="px-5 py-3 text-white text-right font-mono">
-                        Rs {h.amount}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                            STATUS_STYLE[h.status] ?? STATUS_STYLE.pending
-                          }`}
-                        >
-                          {h.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </div>
+export interface EsewaPayloadResponse {
+  form_url: string;
+  payload: Record<string, string>;
+  transaction_uuid: string;
+}
 
-      {/* Payment Modal */}
-      <PaymentModal
-        plan={selectedPlan}
-        onClose={() => setSelectedPlan(null)}
-        onSuccess={handlePaymentSuccess}
-      />
-    </div>
-  );
-};
+export interface KhaltiInitiateResponse {
+  payment_url: string;
+  pidx: string;
+  order_id: string;
+}
 
-export default Billing;
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
+  });
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(error.detail ?? "API request failed");
+  }
+  return res.json();
+}
+
+// ── Plans ────────────────────────────────────────────────────────────────────
+
+export const getPlans = (): Promise<PlanInfo[]> =>
+  apiFetch("/api/plans/");
+
+export const getPlan = (plan: string): Promise<PlanInfo> =>
+  apiFetch(`/api/plans/${plan}`);
+
+export const comparePlans = (userId: string): Promise<PlanComparison[]> =>
+  apiFetch(`/api/plans/compare/${userId}`);
+
+// ── Billing ──────────────────────────────────────────────────────────────────
+
+export const getBillingStatus = (userId: string): Promise<BillingStatus> =>
+  apiFetch(`/api/billing/status/${userId}`);
+
+export const getSubscription = (userId: string): Promise<SubscriptionResponse> =>
+  apiFetch(`/api/billing/subscription/${userId}`);
+
+export const getPaymentHistory = (
+  userId: string,
+  limit = 20,
+  offset = 0
+): Promise<PaymentRecord[]> =>
+  apiFetch(`/api/billing/payments/${userId}?limit=${limit}&offset=${offset}`);
+
+export const cancelSubscription = (userId: string): Promise<{ message: string; period_end: string }> =>
+  apiFetch(`/api/billing/cancel/${userId}`, { method: "POST" });
+
+// ── Payments ─────────────────────────────────────────────────────────────────
+
+export const initiateEsewa = (plan: string, userId: string): Promise<EsewaPayloadResponse> =>
+  apiFetch(`/api/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
+
+export const initiateKhalti = (plan: string, userId: string): Promise<KhaltiInitiateResponse> =>
+  apiFetch(`/api/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
+
+// ── Usage ────────────────────────────────────────────────────────────────────
+
+export const getUsage = (userId: string): Promise<UsageResponse> =>
+  apiFetch(`/api/usage/${userId}`);
+
+export const getUsageHistory = (
+  userId: string,
+  page = 1,
+  pageSize = 20
+): Promise<UsageHistoryResponse> =>
+  apiFetch(`/api/usage/${userId}/history?page=${page}&page_size=${pageSize}`);
+
+export const getUsageSummary = (userId: string, days = 30): Promise<UsageSummaryResponse> =>
+  apiFetch(`/api/usage/${userId}/summary?days=${days}`);

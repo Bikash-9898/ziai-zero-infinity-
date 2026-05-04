@@ -1,44 +1,27 @@
-import React, { useState } from "react";
-import { initiateEsewaPayment } from "@/api/billing";
+import { useState } from "react";
+import { initiateEsewa } from "../../api/billing";
 
 interface EsewaButtonProps {
-  planId: string;
-  onSuccess?: () => void;
-  onError?: (err: string) => void;
-  disabled?: boolean;
+  plan: string;
+  userId: string;
 }
 
-const EsewaButton: React.FC<EsewaButtonProps> = ({
-  planId,
-  onSuccess,
-  onError,
-  disabled,
-}) => {
+export default function EsewaButton({ plan, userId }: EsewaButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handlePay = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const data = await initiateEsewaPayment(planId);
+      const data = await initiateEsewa(plan, userId);
 
-      // eSewa uses a form POST redirect
+      // eSewa requires a hidden form POST — cannot use fetch redirect
       const form = document.createElement("form");
       form.method = "POST";
-      form.action = "https://uat.esewa.com.np/epay/main"; // use live URL in prod
+      form.action = data.form_url;
 
-      const fields: Record<string, string> = {
-        amt: String(data.amount),
-        pdc: "0",
-        psc: "0",
-        txAmt: "0",
-        tAmt: String(data.amount),
-        pid: data.transaction_id,
-        scd: data.product_code ?? "EPAYTEST",
-        su: `${window.location.origin}/billing/esewa/success`,
-        fu: `${window.location.origin}/billing/esewa/failure`,
-      };
-
-      Object.entries(fields).forEach(([key, value]) => {
+      Object.entries(data.payload).forEach(([key, value]) => {
         const input = document.createElement("input");
         input.type = "hidden";
         input.name = key;
@@ -48,61 +31,83 @@ const EsewaButton: React.FC<EsewaButtonProps> = ({
 
       document.body.appendChild(form);
       form.submit();
-
-      onSuccess?.();
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "eSewa payment failed";
-      onError?.(msg);
-    } finally {
+    } catch (e) {
+      setError((e as Error).message ?? "Failed to initiate eSewa payment");
       setLoading(false);
     }
   };
 
   return (
-    <button
-      onClick={handlePay}
-      disabled={disabled || loading}
-      className="w-full flex items-center justify-center gap-3 py-3 px-5 rounded-xl font-semibold text-white transition-all duration-200 bg-[#60BB47] hover:bg-[#4da33a] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      {/* eSewa Logo SVG */}
-      <svg width="22" height="22" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="20" fill="white" />
-        <text
-          x="50%"
-          y="56%"
-          dominantBaseline="middle"
-          textAnchor="middle"
-          fontSize="16"
-          fontWeight="bold"
-          fill="#60BB47"
-        >
-          e
-        </text>
-      </svg>
-      {loading ? (
-        <span className="flex items-center gap-2">
-          <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8v8H4z"
-            />
-          </svg>
-          Redirecting…
-        </span>
-      ) : (
-        "Pay with eSewa"
-      )}
-    </button>
-  );
-};
+    <div>
+      <button
+        onClick={handlePay}
+        disabled={loading}
+        className="esewa-btn"
+      >
+        {loading ? (
+          <span className="esewa-spinner" />
+        ) : (
+          <>
+            <span className="esewa-logo-mark">e</span>
+            Pay with eSewa
+          </>
+        )}
+      </button>
+      {error && <p className="esewa-error">{error}</p>}
 
-export default EsewaButton;
+      <style>{`
+        .esewa-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 13px 20px;
+          background: linear-gradient(135deg, #60bb46, #4da038);
+          color: #fff;
+          font-size: 15px;
+          font-weight: 700;
+          border: none;
+          border-radius: 12px;
+          cursor: pointer;
+          transition: filter 0.2s, transform 0.15s;
+          box-shadow: 0 4px 20px #60bb4644;
+          letter-spacing: 0.01em;
+        }
+        .esewa-btn:hover:not(:disabled) {
+          filter: brightness(1.1);
+          transform: translateY(-1px);
+        }
+        .esewa-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .esewa-logo-mark {
+          width: 24px;
+          height: 24px;
+          border-radius: 6px;
+          background: rgba(255,255,255,0.25);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          font-weight: 900;
+          flex-shrink: 0;
+        }
+        .esewa-spinner {
+          display: inline-block;
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+        }
+        .esewa-error {
+          font-size: 12px;
+          color: #ef4444;
+          text-align: center;
+          margin: 8px 0 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
+    </div>
+  );
+}

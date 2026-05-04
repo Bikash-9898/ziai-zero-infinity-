@@ -1,83 +1,99 @@
 // import React, { useState } from "react";
-// import { initiateKhaltiPayment } from "@/api/billing";
+// import { initiateKhalti } from "../../api/billing";
 
 // interface KhaltiButtonProps {
-//   planId: string;
-//   amount: number; // in NPR
-//   onSuccess?: () => void;
-//   onError?: (err: string) => void;
-//   disabled?: boolean;
+//   plan: string;
+//   userId: string;
 // }
 
-// const KhaltiButton: React.FC<KhaltiButtonProps> = ({
-//   planId,
-//   amount,
-//   onSuccess,
-//   onError,
-//   disabled,
-// }) => {
+// export default function KhaltiButton({ plan, userId }: KhaltiButtonProps) {
 //   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
 
 //   const handlePay = async () => {
 //     setLoading(true);
+//     setError(null);
 //     try {
-//       const data = await initiateKhaltiPayment(planId);
-
-//       // Khalti v2 (payment initiation URL)
-//       if (data.payment_url) {
-//         window.location.href = data.payment_url;
-//         onSuccess?.();
-//         return;
-//       }
-
-//       throw new Error("No payment URL returned from Khalti");
-//     } catch (e: unknown) {
-//       const msg = e instanceof Error ? e.message : "Khalti payment failed";
-//       onError?.(msg);
+//       const data = await initiateKhalti(plan, userId);
+//       // Khalti uses a simple redirect to their hosted payment page
+//       window.location.href = data.payment_url;
+//     } catch (e: any) {
+//       setError(e.message ?? "Failed to initiate Khalti payment");
 //       setLoading(false);
 //     }
 //   };
 
 //   return (
-//     <button
-//       onClick={handlePay}
-//       disabled={disabled || loading}
-//       className="w-full flex items-center justify-center gap-3 py-3 px-5 rounded-xl font-semibold text-white transition-all duration-200 bg-[#5C2D91] hover:bg-[#4a2475] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-//     >
-//       {/* Khalti purple diamond logo */}
-//       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-//         <path
-//           d="M12 2L22 12L12 22L2 12L12 2Z"
-//           fill="white"
-//           fillOpacity="0.9"
-//         />
-//         <path d="M12 6L18 12L12 18L6 12L12 6Z" fill="#5C2D91" />
-//       </svg>
+//     <div>
+//       <button
+//         onClick={handlePay}
+//         disabled={loading}
+//         className="khalti-btn"
+//       >
+//         {loading ? (
+//           <span className="khalti-spinner" />
+//         ) : (
+//           <>
+//             <span className="khalti-logo-mark">K</span>
+//             Pay with Khalti
+//           </>
+//         )}
+//       </button>
+//       {error && <p className="khalti-error">{error}</p>}
 
-//       {loading ? (
-//         <span className="flex items-center gap-2">
-//           <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
-//             <circle
-//               className="opacity-25"
-//               cx="12"
-//               cy="12"
-//               r="10"
-//               stroke="currentColor"
-//               strokeWidth="4"
-//             />
-//             <path
-//               className="opacity-75"
-//               fill="currentColor"
-//               d="M4 12a8 8 0 018-8v8H4z"
-//             />
-//           </svg>
-//           Redirecting…
-//         </span>
-//       ) : (
-//         `Pay Rs ${amount} with Khalti`
-//       )}
-//     </button>
+//       <style>{`
+//         .khalti-btn {
+//           width: 100%;
+//           display: flex;
+//           align-items: center;
+//           justify-content: center;
+//           gap: 10px;
+//           padding: 13px 20px;
+//           background: linear-gradient(135deg, #5c2d91, #7b3fc4);
+//           color: #fff;
+//           font-size: 15px;
+//           font-weight: 700;
+//           border: none;
+//           border-radius: 12px;
+//           cursor: pointer;
+//           transition: filter 0.2s, transform 0.15s;
+//           box-shadow: 0 4px 20px #5c2d9144;
+//           letter-spacing: 0.01em;
+//         }
+//         .khalti-btn:hover:not(:disabled) {
+//           filter: brightness(1.12);
+//           transform: translateY(-1px);
+//         }
+//         .khalti-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+//         .khalti-logo-mark {
+//           width: 24px;
+//           height: 24px;
+//           border-radius: 6px;
+//           background: rgba(255,255,255,0.2);
+//           display: flex;
+//           align-items: center;
+//           justify-content: center;
+//           font-size: 13px;
+//           font-weight: 900;
+//           flex-shrink: 0;
+//         }
+//         .khalti-spinner {
+//           display: inline-block;
+//           width: 18px;
+//           height: 18px;
+//           border: 2px solid rgba(255,255,255,0.3);
+//           border-top-color: #fff;
+//           border-radius: 50%;
+//           animation: spin 0.7s linear infinite;
+//         }
+//         .khalti-error {
+//           font-size: 12px;
+//           color: #ef4444;
+//           text-align: center;
+//           margin: 8px 0 0;
+//         }
+//         @keyframes spin { to { transform: rotate(360deg); } }
+//       `}</style>
+//     </div>
 //   );
-// };
-
-// export default KhaltiButton;
+// }

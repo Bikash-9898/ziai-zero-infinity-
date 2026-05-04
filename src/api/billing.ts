@@ -1,133 +1,178 @@
-const BASE_URL = "http://localhost:8000/api";
+// Billing API client for React frontend
+// Provides functions to interact with the backend billing and usage APIs
+const API = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
-export interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  tokens: number;
-  requests: number;
-  features: string[];
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export interface PlanInfo {
+  plan: string;
+  tokens_per_month: number;
+  requests_per_month: number;
+  image_generations_per_month: number;
+  price_npr: number;
+  is_unlimited: boolean;
 }
 
-export interface UsageData {
-  tokens_used: number;
-  request_count: number;
-  period_start: string;
-  period_end: string;
-  token_limit: number;
-  request_limit: number;
+export interface PlanComparison extends PlanInfo {
+  is_current: boolean;
+  action: "current" | "upgrade" | "downgrade";
 }
 
-export interface Subscription {
+export interface SubscriptionResponse {
   id: string;
+  user_id: string;
   plan: string;
   status: string;
-  current_period_start: string;
-  current_period_end: string;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  created_at: string;
 }
 
-export interface PaymentInitResponse {
-  payment_url: string;
-  transaction_id: string;
-  product_code?: string;
+export interface PaymentRecord {
+  id: string;
+  user_id: string;
+  provider: string;
+  plan: string;
   amount: number;
+  currency: string;
+  status: string;
+  transaction_id: string | null;
+  verified_at: string | null;
+  created_at: string;
 }
 
-function getAuthHeaders(): HeadersInit {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  return {
-    "Content-Type": "application/json",
-    ...(user?.email ? { "X-User-Email": user.email } : {}),
+export interface BillingStatus {
+  user_id: string;
+  current_plan: string;
+  is_active: boolean;
+  subscription: {
+    status: string | null;
+    period_start: string | null;
+    period_end: string | null;
+  };
+  last_payment: {
+    provider: string | null;
+    amount: string | null;
+    date: string | null;
   };
 }
 
-export async function fetchPlans(): Promise<Plan[]> {
-  const res = await fetch(`${BASE_URL}/plans`, { headers: getAuthHeaders() });
-  if (!res.ok) throw new Error("Failed to fetch plans");
-  return res.json();
+export interface UsageResponse {
+  user_id: string;
+  plan: string;
+  tokens_used: number;
+  tokens_limit: number;
+  requests_used: number;
+  requests_limit: number;
+  images_used: number;
+  images_limit: number;
+  period_start: string;
+  period_end: string;
+  percent_tokens_used: number | null;
+  percent_requests_used: number | null;
 }
 
-export async function fetchUsage(): Promise<UsageData> {
-  const res = await fetch(`${BASE_URL}/usage/current`, {
-    headers: getAuthHeaders(),
+export interface AiRequestRecord {
+  id: string;
+  user_id: string;
+  model: string;
+  tokens_input: number | null;
+  tokens_output: number | null;
+  total_tokens: number;
+  cost: number | null;
+  latency_ms: number | null;
+  status: string;
+  created_at: string;
+}
+
+export interface UsageHistoryResponse {
+  requests: AiRequestRecord[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface UsageSummaryResponse {
+  daily_tokens: { date: string; tokens: number; requests: number }[];
+  top_models: { model: string; count: number; tokens: number }[];
+  total_cost: number;
+  avg_latency_ms: number | null;
+}
+
+export interface EsewaPayloadResponse {
+  form_url: string;
+  payload: Record<string, string>;
+  transaction_uuid: string;
+}
+
+export interface KhaltiInitiateResponse {
+  payment_url: string;
+  pidx: string;
+  order_id: string;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
+  const res = await fetch(`${API}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...options,
   });
-  if (!res.ok) throw new Error("Failed to fetch usage");
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(error.detail ?? "API request failed");
+  }
   return res.json();
 }
 
-export async function fetchSubscription(): Promise<Subscription | null> {
-  const res = await fetch(`${BASE_URL}/subscriptions/current`, {
-    headers: getAuthHeaders(),
-  });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error("Failed to fetch subscription");
-  return res.json();
-}
+// ── Plans ────────────────────────────────────────────────────────────────────
 
-export async function initiateEsewaPayment(
-  planId: string
-): Promise<PaymentInitResponse> {
-  const res = await fetch(`${BASE_URL}/esewa/initiate`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify({ plan_id: planId }),
-  });
-  if (!res.ok) throw new Error("Failed to initiate eSewa payment");
-  return res.json();
-}
+export const getPlans = (): Promise<PlanInfo[]> =>
+  apiFetch("/api/plans/");
 
-// export async function initiateKhaltiPayment(
-//   planId: string
-// ): Promise<PaymentInitResponse> {
-//   const res = await fetch(`${BASE_URL}/khalti/initiate`, {
-//     method: "POST",
-//     headers: getAuthHeaders(),
-//     body: JSON.stringify({ plan_id: planId }),
-//   });
-//   if (!res.ok) throw new Error("Failed to initiate Khalti payment");
-//   return res.json();
-// }
+export const getPlan = (plan: string): Promise<PlanInfo> =>
+  apiFetch(`/api/plans/${plan}`);
 
-export async function verifyEsewaPayment(params: {
-  oid: string;
-  amt: string;
-  refId: string;
-}): Promise<{ success: boolean; message: string }> {
-  const res = await fetch(`${BASE_URL}/esewa/verify`, {
-    method: "POST",
-    headers: getAuthHeaders(),
-    body: JSON.stringify(params),
-  });
-  if (!res.ok) throw new Error("eSewa verification failed");
-  return res.json();
-}
+export const comparePlans = (userId: string): Promise<PlanComparison[]> =>
+  apiFetch(`/api/plans/compare/${userId}`);
 
-// export async function verifyKhaltiPayment(params: {
-//   token: string;
-//   amount: number;
-// }): Promise<{ success: boolean; message: string }> {
-//   const res = await fetch(`${BASE_URL}/khalti/verify`, {
-//     method: "POST",
-//     headers: getAuthHeaders(),
-//     body: JSON.stringify(params),
-//   });
-//   if (!res.ok) throw new Error("Khalti verification failed");
-//   return res.json();
-// }
+// ── Billing ──────────────────────────────────────────────────────────────────
 
-export async function fetchBillingHistory(): Promise<
-  {
-    id: string;
-    plan: string;
-    amount: number;
-    method: string;
-    status: string;
-    created_at: string;
-  }[]
-> {
-  const res = await fetch(`${BASE_URL}/billing/history`, {
-    headers: getAuthHeaders(),
-  });
-  if (!res.ok) throw new Error("Failed to fetch billing history");
-  return res.json();
-}
+export const getBillingStatus = (userId: string): Promise<BillingStatus> =>
+  apiFetch(`/api/billing/status/${userId}`);
+
+export const getSubscription = (userId: string): Promise<SubscriptionResponse> =>
+  apiFetch(`/api/billing/subscription/${userId}`);
+
+export const getPaymentHistory = (
+  userId: string,
+  limit = 20,
+  offset = 0
+): Promise<PaymentRecord[]> =>
+  apiFetch(`/api/billing/payments/${userId}?limit=${limit}&offset=${offset}`);
+
+export const cancelSubscription = (userId: string): Promise<{ message: string; period_end: string }> =>
+  apiFetch(`/api/billing/cancel/${userId}`, { method: "POST" });
+
+// ── Payments ─────────────────────────────────────────────────────────────────
+
+export const initiateEsewa = (plan: string, userId: string): Promise<EsewaPayloadResponse> =>
+  apiFetch(`/api/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
+
+export const initiateKhalti = (plan: string, userId: string): Promise<KhaltiInitiateResponse> =>
+  apiFetch(`/api/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
+
+// ── Usage ────────────────────────────────────────────────────────────────────
+
+export const getUsage = (userId: string): Promise<UsageResponse> =>
+  apiFetch(`/api/usage/${userId}`);
+
+export const getUsageHistory = (
+  userId: string,
+  page = 1,
+  pageSize = 20
+): Promise<UsageHistoryResponse> =>
+  apiFetch(`/api/usage/${userId}/history?page=${page}&page_size=${pageSize}`);
+
+export const getUsageSummary = (userId: string, days = 30): Promise<UsageSummaryResponse> =>
+  apiFetch(`/api/usage/${userId}/summary?days=${days}`);

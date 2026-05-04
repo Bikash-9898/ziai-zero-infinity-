@@ -1,3 +1,5 @@
+// Authentication context provider for React app
+// Manages user state, login/logout functions, and persists auth info in localStorage
 import { useState, useCallback, type ReactNode } from 'react';
 import { AuthContext } from './context';
 import { authApi } from '@/api/auth';

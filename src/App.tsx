@@ -4,6 +4,8 @@ import Home from './pages/home';
 import AdminDashboard from './pages/AdminDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
+// import UsageStats from './pages/UsageStats';
+// import Dashboard from './pages/Dashboard';
 
 
 const App = () => {
@@ -11,6 +13,8 @@ const App = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/admin" element={<AdminDashboard />} />
+      {/* <Route path="/admin/Billing_dashboard" element={<Dashboard />} />
+      <Route path="/admin/usage" element={<UsageStats />} /> */}
       {/* <Route path="/signin" element={<SignIn />} /> */}
       {/* Ensure the path matches the "to" prop in your Link */}
       {/* <Route path="/client" element={<ClientDashboard />} /> */}

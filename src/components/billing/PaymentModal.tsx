@@ -1,116 +1,230 @@
-import React, { useEffect, useRef } from "react";
-import EsewaButton from "@/payment/EsewaButton";
-// import KhaltiButton from "@/payment/KhaltiButton";
-import type { Plan } from "@/api/billing";
+import { useState } from "react";
+import EsewaButton from "../payment/EsewaButton";
+// import KhaltiButton from "../payment/KhaltiButton";
 
 interface PaymentModalProps {
-  plan: Plan | null;
+  plan: string;
+  priceNPR: number;
+  userId: string;
   onClose: () => void;
-  onSuccess: () => void;
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({
-  plan,
-  onClose,
-  onSuccess,
-}) => {
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const [error, setError] = React.useState<string | null>(null);
+export default function PaymentModal({ plan, priceNPR, userId, onClose }: PaymentModalProps) {
+  const [selectedProvider, setSelectedProvider] = useState<"esewa" | "khalti" | null>(null);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  if (!plan) return null;
-
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === overlayRef.current) onClose();
-  };
+  const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
 
   return (
-    <div
-      ref={overlayRef}
-      onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-    >
-      <div className="w-full max-w-md bg-slate-900 border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-box">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50">
+        <div className="modal-header">
           <div>
-            <h2 className="text-white font-bold text-lg">
-              Upgrade to{" "}
-              <span className="capitalize text-violet-400">{plan.name}</span>
-            </h2>
-            <p className="text-slate-400 text-sm mt-0.5">
-              Rs {plan.price}/month — billed monthly
-            </p>
+            <h2 className="modal-title">Complete Payment</h2>
+            <p className="modal-sub">Upgrading to <strong>{planLabel}</strong> plan</p>
           </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+
+        {/* Amount */}
+        <div className="amount-row">
+          <span className="amount-label">Amount due</span>
+          <span className="amount-value">NPR {priceNPR.toLocaleString()}</span>
+        </div>
+
+        <div className="divider" />
+
+        {/* Provider selection */}
+        <p className="section-label">Choose payment method</p>
+        <div className="provider-grid">
           <button
-            onClick={onClose}
-            className="text-slate-500 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-700"
+            className={`provider-btn ${selectedProvider === "esewa" ? "selected" : ""}`}
+            onClick={() => setSelectedProvider("esewa")}
           >
-            ✕
+            <span className="provider-logo esewa-logo">e</span>
+            <span className="provider-name">eSewa</span>
+            <span className="provider-tag">NPR · Wallet</span>
+          </button>
+          <button
+            className={`provider-btn ${selectedProvider === "khalti" ? "selected" : ""}`}
+            onClick={() => setSelectedProvider("khalti")}
+          >
+            <span className="provider-logo khalti-logo">K</span>
+            <span className="provider-name">Khalti</span>
+            <span className="provider-tag">NPR · Digital</span>
           </button>
         </div>
 
-        {/* Plan summary */}
-        <div className="px-6 py-4 bg-slate-800/50">
-          <div className="flex gap-3">
-            <div className="flex-1 text-center bg-slate-700/40 rounded-lg py-2.5">
-              <p className="text-white font-bold">
-                {plan.tokens >= 1_000_000
-                  ? `${plan.tokens / 1_000_000}M`
-                  : `${plan.tokens / 1_000}K`}
-              </p>
-              <p className="text-slate-400 text-xs">Tokens / mo</p>
-            </div>
-            <div className="flex-1 text-center bg-slate-700/40 rounded-lg py-2.5">
-              <p className="text-white font-bold">
-                {plan.requests >= 1_000
-                  ? `${plan.requests / 1_000}K`
-                  : plan.requests}
-              </p>
-              <p className="text-slate-400 text-xs">Requests / mo</p>
-            </div>
-          </div>
-        </div>
+        <div className="divider" />
 
-        {/* Payment methods */}
-        <div className="px-6 py-5 space-y-3">
-          <p className="text-slate-400 text-xs uppercase tracking-widest font-semibold mb-4">
-            Choose payment method
-          </p>
-
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-4 py-3 mb-2">
-              {error}
-            </div>
+        {/* Payment button */}
+        <div className="pay-action">
+          {!selectedProvider && (
+            <p className="select-hint">Select a payment method above to continue</p>
           )}
-
-          <EsewaButton
-            planId={plan.id}
-            onSuccess={onSuccess}
-            onError={setError}
-          />
-
-          {/* <KhaltiButton
-            planId={plan.id}
-            amount={plan.price}
-            onSuccess={onSuccess}
-            onError={setError}
-          /> */}
-
-          <p className="text-slate-500 text-xs text-center pt-2">
-            Payments are secure. You'll be redirected to complete payment.
-          </p>
+          {selectedProvider === "esewa" && (
+            <EsewaButton plan={plan} userId={userId} />
+          )}
+          {/* {selectedProvider === "khalti" && (
+            <KhaltiButton plan={plan} userId={userId} />
+          )} */}
         </div>
+
+        {/* Footer note */}
+        <p className="modal-footer-note">
+          🔒 Payments are processed securely. Your subscription activates immediately after verification.
+        </p>
       </div>
+
+      <style>{`
+        .modal-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.75);
+          backdrop-filter: blur(6px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+          padding: 16px;
+          animation: fadeIn 0.15s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        .modal-box {
+          background: #0f172a;
+          border: 1px solid #1e293b;
+          border-radius: 20px;
+          width: 100%;
+          max-width: 420px;
+          padding: 28px;
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          animation: slideUp 0.2s cubic-bezier(0.4,0,0.2,1);
+          box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px #ffffff08;
+        }
+        @keyframes slideUp { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
+        .modal-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+        }
+        .modal-title {
+          font-size: 20px;
+          font-weight: 700;
+          color: #f1f5f9;
+          margin: 0 0 4px;
+          letter-spacing: -0.02em;
+        }
+        .modal-sub {
+          font-size: 13px;
+          color: #64748b;
+          margin: 0;
+        }
+        .modal-sub strong { color: #94a3b8; }
+        .modal-close {
+          background: #1e293b;
+          border: none;
+          color: #64748b;
+          width: 32px;
+          height: 32px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s, color 0.15s;
+          flex-shrink: 0;
+        }
+        .modal-close:hover { background: #273344; color: #f1f5f9; }
+        .amount-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #1e293b;
+          border-radius: 12px;
+          padding: 14px 18px;
+        }
+        .amount-label { font-size: 13px; color: #64748b; }
+        .amount-value {
+          font-size: 22px;
+          font-weight: 800;
+          color: #f1f5f9;
+          font-variant-numeric: tabular-nums;
+          letter-spacing: -0.03em;
+        }
+        .divider { height: 1px; background: #1e293b; }
+        .section-label {
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: #475569;
+          margin: 0;
+        }
+        .provider-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+        .provider-btn {
+          background: #1e293b;
+          border: 1px solid #334155;
+          border-radius: 12px;
+          padding: 16px 12px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 6px;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .provider-btn:hover { border-color: #475569; background: #273344; }
+        .provider-btn.selected {
+          border-color: #6366f1;
+          background: #6366f111;
+          box-shadow: 0 0 16px #6366f122;
+        }
+        .provider-logo {
+          width: 40px;
+          height: 40px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          font-weight: 900;
+          color: #fff;
+        }
+        .esewa-logo { background: #60bb46; }
+        .khalti-logo { background: #5c2d91; }
+        .provider-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: #e2e8f0;
+        }
+        .provider-tag {
+          font-size: 10px;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+        .pay-action { min-height: 44px; display: flex; flex-direction: column; align-items: stretch; }
+        .select-hint {
+          font-size: 13px;
+          color: #475569;
+          text-align: center;
+          margin: 4px 0;
+        }
+        .modal-footer-note {
+          font-size: 11px;
+          color: #334155;
+          text-align: center;
+          margin: 0;
+          line-height: 1.5;
+        }
+      `}</style>
     </div>
   );
-};
-
-export default PaymentModal;
+}
