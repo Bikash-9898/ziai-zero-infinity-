@@ -8,7 +8,7 @@ import ModelSelector from "@/components/ModelSelector";
 import { ImageProvider } from "@/store/imageStore";
 import ImageTab from "@/components/image/ImageTab";
 import { Menu } from "lucide-react";
-import ClientSettings from "@/components/ClientSettings"; // ← from v2
+import ClientSettings from "@/components/ClientSetting/ClientSettings"; // ← from v2
 
 function DashboardLayout() {
   const [activeTab, setActiveTab] = useState<"chat" | "image" | "settings">("chat"); // ← "settings" added from v2

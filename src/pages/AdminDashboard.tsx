@@ -6,7 +6,7 @@ import type { User } from '@/types/types';
 import UserTable from '@/components/UserTable';
 import AdminOverview from '@/components/AdminOverview';
 import { useAuth } from '@/context/useAuth';
-import LoginForm from '@/components/LoginForm';
+import LoginForm from '@/components/LoginForm/LoginForm';
 
 // ─────────────────────────────────────────────────────────────
 // Types
