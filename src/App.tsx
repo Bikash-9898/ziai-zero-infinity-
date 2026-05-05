@@ -6,6 +6,7 @@ import ClientDashboard from './pages/ClientDashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
 // import UsageStats from './pages/UsageStats';
 // import Dashboard from './pages/Dashboard';
+import BillingPage from './pages/BillingPage';
 
 
 const App = () => {
@@ -23,6 +24,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <ClientDashboard />
+            </ProtectedRoute>
+          }
+        />
+      <Route 
+          path="/billing" 
+          element={
+            <ProtectedRoute>
+              <BillingPage />
             </ProtectedRoute>
           }
         />

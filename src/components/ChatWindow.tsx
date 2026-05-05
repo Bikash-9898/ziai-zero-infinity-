@@ -28,7 +28,7 @@ export default function ChatWindow() {
         {messages.map((msg, idx) =>
           msg.role === 'assistant' ? (
             <div key={idx} className="flex gap-3 items-start">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shrink-0 border border-purple-400/30 shadow-lg shadow-purple-500/10">
+              <div className="w-9 h-9 rounded-xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center shrink-0 border border-purple-400/30 shadow-lg shadow-purple-500/10">
                 <Sparkles size={16} className="text-white" />
               </div>
               <div className="bg-white/5 border border-white/10 p-5 rounded-2xl rounded-tl-none shadow-xl max-w-[85%]">
@@ -51,7 +51,7 @@ export default function ChatWindow() {
 
         {sending && (
           <div className="flex gap-3 items-start">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shrink-0 border border-purple-400/30">
+            <div className="w-9 h-9 rounded-xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center shrink-0 border border-purple-400/30">
               <Sparkles size={16} className="text-white" />
             </div>
             <div className="bg-white/5 border border-white/10 p-4 rounded-2xl rounded-tl-none shadow-xl">

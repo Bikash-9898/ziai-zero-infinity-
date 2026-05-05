@@ -19,6 +19,7 @@ import {
   CircleArrowUp,
 } from 'lucide-react';
 import UpgradeModal from './billing/UpgradeModal';
+import { Link } from 'react-router-dom';
 
 interface SidebarProps {
   activeTab: 'chat' | 'image' | 'settings';
@@ -120,7 +121,7 @@ export default function Sidebar({
         {/* Logo + mobile close */}
         <div className="p-4 md:p-5 border-b border-white/5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+            <div className="h-9 w-9 rounded-xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
               <img
                 src="https://zeroinfinitytechnologies.com/images/logo-1771865164119.webp?t=1777117488383"
                 alt="Logo"
@@ -185,13 +186,13 @@ export default function Sidebar({
           </button>
 
           {/* Billing nav link (v1) */}
-          <a
-            href="/billing"
+          <Link
+            to="/billing"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200"
           >
             <CreditCard size={17} />
             Billing & Plans
-          </a>
+          </Link>
         </nav>
 
         {/* New Chat */}
