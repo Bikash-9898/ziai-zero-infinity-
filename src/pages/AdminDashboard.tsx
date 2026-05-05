@@ -31,7 +31,9 @@ interface BillingStats {
   recent_payments: PaymentRecord[];
 }
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+const API ='http://localhost:8000';
+const ADMIN_KEY= "supersecretadminkey"
+// console.log('API URL:', API);
 
 const PLAN_COLORS: Record<string, string> = {
   free: '#64748b', basic: '#06b6d4', pro: '#6366f1', enterprise: '#f59e0b',
@@ -46,7 +48,11 @@ function AdminBillingView() {
   const [error, setError]     = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/api/admin/billing/stats`)
+    fetch(`${API}/api/admin/billing/stats`, {
+      headers: {
+        'X-Admin-Key': ADMIN_KEY, // ← simple auth for demo purposes; replace with real auth in production
+      },
+    })
       .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
       .then(setStats)
       .catch(() => setError('Failed to load billing data'))
@@ -267,7 +273,7 @@ const AdminDashboard = () => {
 
         <div className="flex flex-1 overflow-hidden">
           <div className="flex-1 overflow-y-auto px-4 md:px-10 pb-24 md:pb-10">
-            {activeView === 'users'    && <UserTable users={users} loading={loading} />}
+            {activeView === 'users'    && <UserTable users={users} />}
             {activeView === 'overview' && <AdminOverview />}
             {activeView === 'billing'  && <AdminBillingView />}
           </div>

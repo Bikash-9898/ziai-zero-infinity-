@@ -6,6 +6,7 @@ export interface AuthContextType {
   loading: boolean;
   login: (googleToken: string) => Promise<void>;
   logout: () => void;
+  setUser: (user: User | null) => void; 
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
