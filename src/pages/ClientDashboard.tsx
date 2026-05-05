@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/useAuth";
+import { useChatStore } from "@/store/useChatStore";
 import { ChatProvider } from "@/store/chatStore";
 import Sidebar from "@/components/Sidebar";
 import ChatWindow from "@/components/ChatWindow";
@@ -8,15 +9,24 @@ import ModelSelector from "@/components/ModelSelector";
 import { ImageProvider } from "@/store/imageStore";
 import ImageTab from "@/components/image/ImageTab";
 import { Menu } from "lucide-react";
-import ClientSettings from "@/components/ClientSetting/ClientSettings"; // ← from v2
+import ClientSettings from "@/components/ClientSettings/ClientSettings";
 
 function DashboardLayout() {
-  const [activeTab, setActiveTab] = useState<"chat" | "image" | "settings">("chat"); // ← "settings" added from v2
+  const [activeTab, setActiveTab] = useState<"chat" | "image" | "settings">("chat");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const { send, sending } = useChatStore();
+
+  useEffect(() => {
+    const pendingPrompt = sessionStorage.getItem("zi_pending_prompt");
+    if (!pendingPrompt || !user?.email || sending) return;
+
+    sessionStorage.removeItem("zi_pending_prompt");
+    void send(pendingPrompt, user.email);
+  }, [send, sending, user?.email]);
 
   return (
-    <div className="flex h-dvh bg-[#05070a] text-slate-100 font-sans overflow-hidden">
+    <div className="flex h-dvh bg-[#06060c] text-slate-100 font-sans overflow-hidden">
 
       {/* Overlay (mobile) */}
       {sidebarOpen && (
@@ -46,52 +56,47 @@ function DashboardLayout() {
       <main className="flex-1 flex flex-col min-w-0">
 
         {/* Header */}
-        <header className="h-14 bg-[#05070a]/80 backdrop-blur-md border-b border-slate-800/50 flex items-center justify-between px-3 sm:px-6 z-10">
+        {
+          activeTab === "settings" ?
+            ''
+            : (
+              <header className="h-14 bg-[#06060c]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-3 sm:px-6 z-10">
 
-          {/* Left */}
-          <div className="flex items-center gap-3 min-w-0">
+                {/* Left */}
+                <div className="flex items-center gap-3 min-w-0">
 
-            {/* Mobile menu button */}
-            <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
-              <Menu />
-            </button>
+                  {/* Mobile menu button */}
+                  <button className="md:hidden" onClick={() => setSidebarOpen(true)}>
+                    <Menu />
+                  </button>
 
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
 
-            <h2 className="text-[10px] sm:text-xs font-semibold text-slate-400 tracking-widest uppercase truncate">
-              {activeTab === "chat" ? "Virtual Assistant v2.4" : "Image Engine"}
-            </h2>
+                  <h2 className="text-[10px] sm:text-xs font-semibold text-slate-400 tracking-widest uppercase truncate">
+                    {activeTab === "chat" ? "Virtual Assistant v2.4" : "Image Engine"}
+                  </h2>
 
-            {user?.username && (
-              <span className="text-xs text-slate-600 hidden lg:block">
-                — {user.username.toUpperCase()}
-              </span>
-            )}
-          </div>
+                  {user?.username && (
+                    <span className="text-xs text-slate-600 hidden lg:block">
+                      — {user.username.toUpperCase()}
+                    </span>
+                  )}
+                </div>
 
-          {/* Right */}
-          <div className="flex items-center gap-2 sm:gap-4">
+                {/* Right */}
+                <div className="flex items-center gap-2 sm:gap-4">
 
-            {activeTab === "chat" && (
-              <div className="hidden sm:block">
-                <ModelSelector />
-              </div>
-            )}
+                  {activeTab === "chat" && (
+                    <div className="hidden sm:block">
+                      <ModelSelector />
+                    </div>
+                  )}
 
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-[9px] font-bold text-slate-600 uppercase tracking-tighter">
-                Credits
-              </span>
-              <span className="text-xs font-mono text-blue-400">
-                842.00 INF
-              </span>
-            </div>
+                </div>
+              </header>
+            )
+        }
 
-            <button className="bg-blue-600 hover:bg-blue-500 text-white px-2 sm:px-3 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition-all shadow-lg shadow-blue-600/20">
-              UPGRADE
-            </button>
-          </div>
-        </header>
 
         {/* Content */}
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -103,13 +108,17 @@ function DashboardLayout() {
               </div>
               <MessageInput />
             </>
-          ) : activeTab === "settings" ? (    // ← settings branch from v2
-            <ClientSettings />
-          ) : (
-            <div className="flex-1 overflow-auto">
-              <ImageTab />
-            </div>
-          )}
+          )
+            :
+            activeTab === "settings" ? (
+              <ClientSettings />
+            )
+
+              : (
+                <div className="flex-1 overflow-auto">
+                  <ImageTab />
+                </div>
+              )}
 
         </div>
       </main>

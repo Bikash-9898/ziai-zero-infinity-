@@ -15,7 +15,7 @@ interface UpgradeModalProps {
 
 type Step = "plans" | "confirm-free" | "confirm-downgrade" | "payment" | "processing";
 
-export default function UpgradeModal({ userId, currentPlan, onClose, onPlanChanged }: UpgradeModalProps) {
+export default function UpgradeModal({ userId, onClose, onPlanChanged }: UpgradeModalProps) {
   const [plans, setPlans]         = useState<PlanComparison[]>([]);
   const [loading, setLoading]     = useState(true);
   const [step, setStep]           = useState<Step>("plans");
@@ -59,8 +59,8 @@ export default function UpgradeModal({ userId, currentPlan, onClose, onPlanChang
       if (!res.ok) throw new Error((await res.json()).detail ?? "Switch failed");
       onPlanChanged?.("free");
       onClose();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err as string ?? "Failed to switch to free plan");
     } finally {
       setActionLoading(false);
     }
@@ -79,8 +79,8 @@ export default function UpgradeModal({ userId, currentPlan, onClose, onPlanChang
       setStep("processing");
       // Auto-submit after a short delay so user sees the "redirecting" screen
       setTimeout(() => esewaFormRef.current?.submit(), 1200);
-    } catch (err: any) {
-      setError(err.message ?? "Failed to initiate payment");
+    } catch (err: unknown) {
+      setError(err as string ?? "Failed to initiate payment");
       setActionLoading(false);
     }
   };

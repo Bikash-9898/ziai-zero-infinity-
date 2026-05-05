@@ -24,11 +24,9 @@ export default function MessageInput() {
   };
 
   return (
-    <div className="p-6 shrink-0 bg-linear-to-t from-[#05070a] via-[#05070a] to-transparent">
+    <div className="p-6 shrink-0 bg-linear-to-t from-[#06060c] via-[#06060c] to-transparent">
       <div className="max-w-3xl mx-auto relative group">
-        {/* Glow effect */}
-        <div className="absolute -inset-1 bg-linear-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-10 group-focus-within:opacity-25 transition-opacity duration-500" />
-        <div className="relative flex items-center bg-[#0a0f18] border border-slate-800 rounded-2xl overflow-hidden focus-within:border-blue-500/50 transition-all">
+        <div className="relative flex items-center bg-[#06060c] border border-white/10 rounded-2xl overflow-hidden focus-within:border-purple-500/50 transition-all">
           <input
             type="text"
             value={input}
@@ -41,7 +39,7 @@ export default function MessageInput() {
           <button
             onClick={handleSend}
             disabled={sending || !input.trim()}
-            className="absolute right-3 p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-500 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+            className="absolute right-3 p-2 bg-linear-to-br from-purple-600 to-blue-500 text-white rounded-xl hover:opacity-90 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-purple-600/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
             {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
           </button>

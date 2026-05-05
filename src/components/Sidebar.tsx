@@ -1,5 +1,5 @@
 // src/components/Sidebar.tsx
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/useAuth';
 import { useChatStore } from '@/store/useChatStore';
 import { useImageStore } from '@/store/useImageStore';
@@ -16,11 +16,12 @@ import {
   Zap,
   X,
   UserRound,
+  CircleArrowUp,
 } from 'lucide-react';
 import UpgradeModal from './billing/UpgradeModal';
 
 interface SidebarProps {
-  activeTab: 'chat' | 'image' | 'settings'; // ← "settings" from v2
+  activeTab: 'chat' | 'image' | 'settings';
   setActiveTab: (tab: 'chat' | 'image' | 'settings') => void;
   isOpen?: boolean;
   onClose?: () => void;
@@ -40,14 +41,14 @@ export default function Sidebar({
   onClose,
 }: SidebarProps) {
   const { user, logout } = useAuth();
-  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showUpgrade, setShowUpgrade]         = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false); // ← v2
+  const accountMenuRef = useRef<HTMLDivElement>(null);           // ← v2
 
-  // ── v2: derived display values ──────────────────────────
   const displayName  = user?.username || 'Guest';
   const displayEmail = user?.email    || 'Not signed in';
   const userInitial  = displayName.trim().charAt(0).toUpperCase() || 'U';
   const planLabel    = user?.plan || 'Free';
-  // ────────────────────────────────────────────────────────
 
   const planColor  = PLAN_COLORS[user?.plan ?? 'free'] ?? '#64748b';
   const isFreePlan = !user?.plan || user.plan === 'free';
@@ -68,22 +69,58 @@ export default function Sidebar({
     if (user?.email) fetchConversations(user.email);
   }, [user?.email, fetchConversations]);
 
+  // ── Click-outside / Escape to close account menu (v2) ───
+  useEffect(() => {
+    if (!accountMenuOpen) return;
+    const handlePointerDown = (e: PointerEvent) => {
+      if (accountMenuRef.current && !accountMenuRef.current.contains(e.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAccountMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [accountMenuOpen]);
+
+  // ── Account menu helpers (v2) ────────────────────────────
+  const openSettings = () => {
+    setActiveTab('settings');
+    setAccountMenuOpen(false);
+    onClose?.();
+  };
+
+  const handleLogout = () => {
+    setAccountMenuOpen(false);
+    logout();
+  };
+
   return (
     <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div onClick={onClose} className="fixed inset-0 bg-black/60 z-40 md:hidden" />
+      )}
+
       <aside
         className={`
           fixed md:static z-50 h-full
           w-64 max-w-[85vw]
-          bg-[#0a0f18] border-r border-slate-800/50
+          bg-[#06060c] border-r border-white/5
           flex flex-col
           transition-transform duration-300
           ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        {/* Logo + mobile close button */}
-        <div className="p-4 md:p-5 border-b border-slate-800/50 flex items-center justify-between gap-3">
+        {/* Logo + mobile close */}
+        <div className="p-4 md:p-5 border-b border-white/5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
               <img
                 src="https://zeroinfinitytechnologies.com/images/logo-1771865164119.webp?t=1777117488383"
                 alt="Logo"
@@ -92,17 +129,12 @@ export default function Sidebar({
             </div>
             <span className="font-bold text-base md:text-lg tracking-tight text-white uppercase">ZI AI</span>
           </div>
-
-          {/* Close button (mobile only) — from v2 */}
-          <button
-            onClick={onClose}
-            className="md:hidden text-slate-400 hover:text-white"
-          >
+          <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
             <X size={20} />
           </button>
         </div>
 
-        {/* Plan badge */}
+        {/* Plan badge (v1) */}
         <div className="px-3 pt-3">
           <div
             style={{ borderColor: `${planColor}44`, background: `${planColor}0a` }}
@@ -132,8 +164,8 @@ export default function Sidebar({
             onClick={() => setActiveTab('chat')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium ${
               activeTab === 'chat'
-                ? 'bg-blue-600/15 text-blue-400 border border-blue-500/20'
-                : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
+                ? 'bg-purple-600/15 text-purple-400 border border-purple-500/20'
+                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
             }`}
           >
             <MessageSquare size={17} />
@@ -144,30 +176,30 @@ export default function Sidebar({
             onClick={() => setActiveTab('image')}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium ${
               activeTab === 'image'
-                ? 'bg-blue-600/15 text-blue-400 border border-blue-500/20'
-                : 'text-slate-400 hover:bg-slate-800/40 hover:text-slate-200'
+                ? 'bg-purple-600/15 text-purple-400 border border-purple-500/20'
+                : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
             }`}
           >
             <ImageIcon size={17} />
             Image Generation
           </button>
 
-          {/* Billing nav link */}
+          {/* Billing nav link (v1) */}
           <a
             href="/billing"
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-slate-400 hover:bg-slate-800/40 hover:text-slate-200"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200"
           >
             <CreditCard size={17} />
             Billing & Plans
           </a>
         </nav>
 
-        {/* New Chat button */}
+        {/* New Chat */}
         {activeTab === 'chat' && (
           <div className="px-3 pt-1 pb-2">
             <button
               onClick={startNewChat}
-              className="w-full flex items-center gap-2 px-3 py-2 bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 text-blue-400 rounded-xl text-sm font-medium transition-all"
+              className="w-full flex items-center gap-2 px-3 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 text-purple-400 rounded-xl text-sm font-medium transition-all"
             >
               <Plus size={16} />
               New Chat
@@ -193,23 +225,17 @@ export default function Sidebar({
                   {conversations.map((conv) => (
                     <li
                       key={conv.id}
+                      onClick={() => { loadConversationMessages(conv.id); onClose?.(); }}
                       className={`group flex items-center gap-2 px-3 py-2 rounded-xl cursor-pointer transition-all ${
                         activeConversationId === conv.id
-                          ? 'bg-slate-800/70 text-slate-200'
-                          : 'text-slate-500 hover:bg-slate-800/40 hover:text-slate-300'
+                          ? 'bg-white/5 text-slate-200'
+                          : 'text-slate-500 hover:bg-white/5 hover:text-slate-300'
                       }`}
-                      onClick={() => {
-                        loadConversationMessages(conv.id);
-                        onClose?.(); // ← close sidebar on mobile after selecting (from v2)
-                      }}
                     >
                       <Bot size={14} className="shrink-0 text-slate-600" />
                       <span className="text-xs truncate flex-1">{conv.title}</span>
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (user?.email) deleteConv(conv.id, user.email);
-                        }}
+                        onClick={(e) => { e.stopPropagation(); if (user?.email) deleteConv(conv.id, user.email); }}
                         className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-all"
                       >
                         <Trash2 size={13} />
@@ -234,7 +260,7 @@ export default function Sidebar({
                   {history.slice(0, 12).map(img => (
                     <div
                       key={img.id}
-                      className="aspect-square rounded-lg overflow-hidden border border-slate-800/60 hover:border-slate-600 transition-all cursor-pointer"
+                      className="aspect-square rounded-lg overflow-hidden border border-white/5 hover:border-white/20 transition-all cursor-pointer"
                       title={img.prompt}
                     >
                       <img src={img.image_url} alt={img.prompt} className="w-full h-full object-cover" />
@@ -246,7 +272,7 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Upgrade nudge for free users */}
+        {/* Upgrade nudge for free users (v1) */}
         {isFreePlan && (
           <div className="px-3 pb-2">
             <button
@@ -263,54 +289,74 @@ export default function Sidebar({
           </div>
         )}
 
-        {/* Footer — redesigned from v2 (user avatar + name + plan + settings/logout) */}
-        <div className="p-3 border-t border-slate-800/50 bg-[#0d131f]">
-          <div className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-200 hover:bg-slate-800/50 transition-colors">
+        {/* Footer — account popover (v2) */}
+        <div ref={accountMenuRef} className="relative p-3 border-t border-white/5">
 
-            {/* Avatar */}
-            <div className="h-9 w-9 shrink-0 rounded-full bg-slate-700 text-sm font-semibold text-white flex items-center justify-center border border-slate-600/70">
+          {/* Popover */}
+          {accountMenuOpen && (
+            <div className="absolute bottom-[calc(100%-0.25rem)] left-3 right-3 z-50 rounded-xl border border-white/10 bg-[#06060c] p-1.5 shadow-2xl shadow-black/50">
+              <div className="px-2.5 py-2 border-b border-white/10">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="truncate text-sm font-medium text-slate-100">{displayName}</span>
+                  <span className="shrink-0 rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-300">
+                    {planLabel}
+                  </span>
+                </div>
+                <p className="truncate text-xs text-slate-500">{displayEmail}</p>
+              </div>
+
+              {/* Upgrade Plan — opens UpgradeModal (v1 modal + v2 menu item) */}
+              <button
+                onClick={() => { setAccountMenuOpen(false); setShowUpgrade(true); }}
+                className="mt-1 flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <CircleArrowUp size={16} />
+                Upgrade Plan
+              </button>
+
+              <button
+                onClick={openSettings}
+                className="mt-1 flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm text-slate-300 hover:bg-white/5 hover:text-white"
+              >
+                <Settings size={16} />
+                Settings
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left text-sm text-slate-300 hover:bg-red-500/10 hover:text-red-300"
+              >
+                <LogOut size={16} />
+                Logout
+              </button>
+            </div>
+          )}
+
+          {/* Avatar trigger */}
+          <button
+            onClick={() => setAccountMenuOpen(open => !open)}
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-slate-200 hover:bg-white/5 transition-colors"
+            aria-expanded={accountMenuOpen}
+            aria-haspopup="menu"
+            title="Open account menu"
+          >
+            <div className="h-9 w-9 shrink-0 rounded-full bg-white/10 text-sm font-semibold text-white flex items-center justify-center border border-white/10">
               {user ? userInitial : <UserRound size={18} />}
             </div>
-
-            {/* Name + email — click to open settings */}
-            <button
-              onClick={() => setActiveTab('settings')}
-              className="min-w-0 flex-1 text-left"
-              title="Open settings"
-            >
+            <div className="min-w-0 flex-1">
               <div className="flex min-w-0 items-center gap-2">
                 <span className="truncate text-sm font-medium">{displayName}</span>
-                <span className="shrink-0 rounded-md bg-slate-700/70 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-300">
+                <span className="shrink-0 rounded-md bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase text-slate-300">
                   {planLabel}
                 </span>
               </div>
               <p className="truncate text-xs text-slate-500">{displayEmail}</p>
-            </button>
-
-            {/* Settings + Logout icon buttons */}
-            <div className="flex shrink-0 items-center gap-1">
-              <button
-                onClick={() => setActiveTab('settings')}
-                className="h-8 w-8 rounded-lg text-slate-400 hover:bg-slate-700/70 hover:text-white flex items-center justify-center"
-                title="Settings"
-                aria-label="Settings"
-              >
-                <Settings size={16} />
-              </button>
-              <button
-                onClick={logout}
-                className="h-8 w-8 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-300 flex items-center justify-center"
-                title="Logout"
-                aria-label="Logout"
-              >
-                <LogOut size={16} />
-              </button>
             </div>
-          </div>
+          </button>
         </div>
       </aside>
 
-      {/* Upgrade modal */}
+      {/* Upgrade modal (v1) */}
       {showUpgrade && user && (
         <UpgradeModal
           userId={user.id}
