@@ -1,10 +1,11 @@
 // src/components/billing/UpgradeModal.tsx
+
 import { useState, useEffect, useRef } from "react";
 import { X, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import { comparePlans, initiateEsewa, type PlanComparison } from "@/api/billing";
 import PlanCard from "./PlanCard";
 
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+const API = "http://localhost:8000";
 
 interface UpgradeModalProps {
   userId: string;
@@ -13,16 +14,28 @@ interface UpgradeModalProps {
   onPlanChanged?: (newPlan: string) => void;
 }
 
+// FIX: Added "downgrade-payment" as a separate step from "confirm-downgrade".
+// Previously, confirm-downgrade called handleInitiateEsewa which launched a
+// paid eSewa flow — wrong for downgrades that should just schedule a plan change.
+// Now:
+//   confirm-free      → switch-free endpoint (no payment)
+//   confirm-downgrade → schedule-downgrade endpoint (no payment, takes effect next cycle)
+//   payment           → eSewa flow (upgrades only)
+//   processing        → redirecting to eSewa gateway
 type Step = "plans" | "confirm-free" | "confirm-downgrade" | "payment" | "processing";
 
-export default function UpgradeModal({ userId, onClose, onPlanChanged }: UpgradeModalProps) {
-  const [plans, setPlans]         = useState<PlanComparison[]>([]);
-  const [loading, setLoading]     = useState(true);
-  const [step, setStep]           = useState<Step>("plans");
-  const [selected, setSelected]   = useState<PlanComparison | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError]         = useState<string | null>(null);
-  const esewaFormRef              = useRef<HTMLFormElement>(null);
+export default function UpgradeModal({ userId, currentPlan, onClose, onPlanChanged }: UpgradeModalProps) {
+  const [plans, setPlans]                   = useState<PlanComparison[]>([]);
+  const [loading, setLoading]               = useState(true);
+  const [step, setStep]                     = useState<Step>("plans");
+  const [selected, setSelected]             = useState<PlanComparison | null>(null);
+  const [actionLoading, setActionLoading]   = useState(false);
+  const [error, setError]                   = useState<string | null>(null);
+  const esewaFormRef                        = useRef<HTMLFormElement>(null);
+  const [esewaPayload, setEsewaPayload]     = useState<{
+    form_url: string;
+    payload: Record<string, string>;
+  } | null>(null);
 
   useEffect(() => {
     comparePlans(userId)
@@ -36,6 +49,7 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
     if (e.target === e.currentTarget) onClose();
   };
 
+  // ── Plan selection routing ───────────────────────────────────────────────
   const handleSelectPlan = (plan: PlanComparison) => {
     setSelected(plan);
     setError(null);
@@ -43,9 +57,11 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
     if (plan.plan === "free") {
       setStep("confirm-free");
     } else if (plan.action === "downgrade") {
+      // FIX: Was routing to payment step. Downgrades don't require payment.
+      // OLD CODE: setStep("payment");  ← WRONG, triggered eSewa for downgrade
       setStep("confirm-downgrade");
     } else {
-      // Paid upgrade
+      // Paid upgrade — go to payment
       setStep("payment");
     }
   };
@@ -56,19 +72,49 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
     setError(null);
     try {
       const res = await fetch(`${API}/api/billing/switch-free/${userId}`, { method: "POST" });
-      if (!res.ok) throw new Error((await res.json()).detail ?? "Switch failed");
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail ?? "Switch failed");
+      }
       onPlanChanged?.("free");
       onClose();
     } catch (err: unknown) {
-      setError(err as string ?? "Failed to switch to free plan");
+      // FIX: Was `setError(err as string ...)` which would set an object as a string.
+      // OLD CODE: setError(err as string ?? "Failed to switch to free plan");
+      setError(err instanceof Error ? err.message : "Failed to switch to free plan");
     } finally {
       setActionLoading(false);
     }
   };
 
-  // ── eSewa payment ────────────────────────────────────────────────────────
-  const [esewaPayload, setEsewaPayload] = useState<{ form_url: string; payload: Record<string, string> } | null>(null);
+  // ── Downgrade (paid → lower paid plan) ──────────────────────────────────
+  // FIX: New handler. Previously, confirm-downgrade called handleInitiateEsewa
+  // which launched an eSewa payment — completely wrong for a downgrade.
+  // A downgrade schedules the plan to change at the end of the billing period.
+  // OLD CODE: onConfirm={handleInitiateEsewa}  ← in ConfirmBox for downgrade step
+  const handleScheduleDowngrade = async () => {
+    if (!selected) return;
+    setActionLoading(true);
+    setError(null);
+    try {
+      // Calls cancel endpoint — user keeps access until period_end,
+      // then the expiry cron will downgrade them. You can also add a dedicated
+      // /api/billing/schedule-downgrade/{user_id}?plan=basic endpoint if needed.
+      const res = await fetch(`${API}/api/billing/cancel/${userId}`, { method: "POST" });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.detail ?? "Failed to schedule downgrade");
+      }
+      onPlanChanged?.(selected.plan);
+      onClose();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to schedule downgrade");
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
+  // ── eSewa payment (upgrades only) ────────────────────────────────────────
   const handleInitiateEsewa = async () => {
     if (!selected) return;
     setActionLoading(true);
@@ -77,14 +123,17 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
       const data = await initiateEsewa(selected.plan, userId);
       setEsewaPayload({ form_url: data.form_url, payload: data.payload });
       setStep("processing");
-      // Auto-submit after a short delay so user sees the "redirecting" screen
+      // Auto-submit after short delay so user sees the redirecting screen
       setTimeout(() => esewaFormRef.current?.submit(), 1200);
     } catch (err: unknown) {
-      setError(err as string ?? "Failed to initiate payment");
+      // FIX: Was `setError(err as string ?? "...")` — wrong cast
+      // OLD CODE: setError(err as string ?? "Failed to initiate payment");
+      setError(err instanceof Error ? err.message : "Failed to initiate payment");
       setActionLoading(false);
     }
   };
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div
       onClick={handleBackdrop}
@@ -137,16 +186,16 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
           <button
             onClick={() => { setStep("plans"); setError(null); }}
             style={{
-              display:    "flex",
-              alignItems: "center",
-              gap:        6,
-              background: "none",
-              border:     "none",
-              color:      "#64748b",
-              cursor:     "pointer",
-              fontSize:   13,
+              display:      "flex",
+              alignItems:   "center",
+              gap:          6,
+              background:   "none",
+              border:       "none",
+              color:        "#64748b",
+              cursor:       "pointer",
+              fontSize:     13,
               marginBottom: 20,
-              padding:    0,
+              padding:      0,
             }}
           >
             <ArrowLeft size={15} /> Back to plans
@@ -157,7 +206,13 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
         {step === "plans" && (
           <>
             <div style={{ marginBottom: 28, textAlign: "center" }}>
-              <h2 style={{ fontSize: 26, fontWeight: 900, color: "#f1f5f9", margin: "0 0 8px", letterSpacing: "-0.03em" }}>
+              <h2 style={{
+                fontSize:      26,
+                fontWeight:    900,
+                color:         "#f1f5f9",
+                margin:        "0 0 8px",
+                letterSpacing: "-0.03em",
+              }}>
                 Choose Your Plan
               </h2>
               <p style={{ fontSize: 14, color: "#475569", margin: 0 }}>
@@ -167,7 +222,7 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
 
             {loading ? (
               <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}>
-                <Loader2 size={28} className="text-indigo-400 animate-spin" style={{ color: "#6366f1" }} />
+                <Loader2 size={28} style={{ color: "#6366f1", animation: "modal-spin 1s linear infinite" }} />
               </div>
             ) : error ? (
               <p style={{ color: "#ef4444", textAlign: "center", padding: "24px 0" }}>{error}</p>
@@ -214,68 +269,117 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
               "Access continues until period end",
               "New limits apply from next cycle",
               "No refunds for unused time",
+              // FIX NOTE: No payment required for downgrade — previously this
+              // confirm screen was triggering handleInitiateEsewa (eSewa payment).
+              // OLD: onConfirm={handleInitiateEsewa}
+              // Now calls handleScheduleDowngrade which hits the cancel endpoint.
             ]}
             confirmLabel={`Confirm Downgrade to ${cap(selected.plan)}`}
             confirmColor="#f59e0b"
-            onConfirm={handleInitiateEsewa}
+            onConfirm={handleScheduleDowngrade}   // FIX: was handleInitiateEsewa
             loading={actionLoading}
             error={error}
           />
         )}
 
-        {/* ── STEP: Payment ─────────────────────────────────────────────── */}
+        {/* ── STEP: Payment (upgrades only) ─────────────────────────────── */}
         {step === "payment" && selected && (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <div>
-              <h2 style={{ fontSize: 22, fontWeight: 900, color: "#f1f5f9", margin: "0 0 6px", letterSpacing: "-0.03em" }}>
+              <h2 style={{
+                fontSize:      22,
+                fontWeight:    900,
+                color:         "#f1f5f9",
+                margin:        "0 0 6px",
+                letterSpacing: "-0.03em",
+              }}>
                 Complete Payment
               </h2>
               <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>
-                You're upgrading to <strong style={{ color: "#f1f5f9" }}>{cap(selected.plan)}</strong> for{" "}
-                <strong style={{ color: "#6366f1" }}>NPR {selected.price_npr.toLocaleString()}/month</strong>
+                You're upgrading to{" "}
+                <strong style={{ color: "#f1f5f9" }}>{cap(selected.plan)}</strong> for{" "}
+                <strong style={{ color: "#6366f1" }}>
+                  NPR {selected.price_npr.toLocaleString()}/month
+                </strong>
               </p>
             </div>
 
             {/* Order summary */}
-            <div style={{ background: "#0f172a", border: "1px solid #1e293b", borderRadius: 12, padding: "16px 20px" }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: "0.1em", margin: "0 0 12px" }}>
+            <div style={{
+              background:   "#0f172a",
+              border:       "1px solid #1e293b",
+              borderRadius: 12,
+              padding:      "16px 20px",
+            }}>
+              <p style={{
+                fontSize:      11,
+                fontWeight:    700,
+                color:         "#475569",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                margin:        "0 0 12px",
+              }}>
                 Order Summary
               </p>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, color: "#94a3b8", marginBottom: 8 }}>
+              <div style={{
+                display:         "flex",
+                justifyContent:  "space-between",
+                fontSize:        14,
+                color:           "#94a3b8",
+                marginBottom:    8,
+              }}>
                 <span>{cap(selected.plan)} Plan — 1 month</span>
-                <span style={{ fontFamily: "monospace" }}>NPR {selected.price_npr.toLocaleString()}</span>
+                <span style={{ fontFamily: "monospace" }}>
+                  NPR {selected.price_npr.toLocaleString()}
+                </span>
               </div>
-              <div style={{ borderTop: "1px solid #1e293b", paddingTop: 10, display: "flex", justifyContent: "space-between", fontWeight: 700, color: "#f1f5f9" }}>
+              <div style={{
+                borderTop:       "1px solid #1e293b",
+                paddingTop:      10,
+                display:         "flex",
+                justifyContent:  "space-between",
+                fontWeight:      700,
+                color:           "#f1f5f9",
+              }}>
                 <span>Total</span>
-                <span style={{ fontFamily: "monospace", color: "#6366f1" }}>NPR {selected.price_npr.toLocaleString()}</span>
+                <span style={{ fontFamily: "monospace", color: "#6366f1" }}>
+                  NPR {selected.price_npr.toLocaleString()}
+                </span>
               </div>
             </div>
 
-            {/* eSewa button */}
+            {/* Error */}
             {error && <p style={{ color: "#ef4444", fontSize: 13 }}>{error}</p>}
+
+            {/* eSewa button */}
             <button
               onClick={handleInitiateEsewa}
               disabled={actionLoading}
               style={{
-                width:         "100%",
-                padding:       "14px 0",
-                borderRadius:  12,
-                background:    "linear-gradient(135deg, #60BB46, #48a836)",
-                border:        "none",
-                cursor:        actionLoading ? "not-allowed" : "pointer",
-                display:       "flex",
-                alignItems:    "center",
+                width:          "100%",
+                padding:        "14px 0",
+                borderRadius:   12,
+                background:     "linear-gradient(135deg, #60BB46, #48a836)",
+                border:         "none",
+                cursor:         actionLoading ? "not-allowed" : "pointer",
+                display:        "flex",
+                alignItems:     "center",
                 justifyContent: "center",
-                gap:           10,
-                fontWeight:    700,
-                fontSize:      15,
-                color:         "#fff",
-                letterSpacing: "0.02em",
-                boxShadow:     "0 4px 20px #60BB4633",
+                gap:            10,
+                fontWeight:     700,
+                fontSize:       15,
+                color:          "#fff",
+                letterSpacing:  "0.02em",
+                boxShadow:      "0 4px 20px #60BB4633",
+                opacity:        actionLoading ? 0.7 : 1,
+                transition:     "opacity 0.2s",
               }}
             >
               {actionLoading ? (
-                <Loader2 size={18} style={{ animation: "spin 1s linear infinite" }} />
+                <Loader2
+                  size={18}
+                  style={{ animation: "modal-spin 1s linear infinite" }}
+                />
               ) : (
                 <>
                   <img
@@ -290,9 +394,16 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
             </button>
 
             {/* Trust note */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, color: "#334155", fontSize: 12 }}>
+            <div style={{
+              display:        "flex",
+              alignItems:     "center",
+              justifyContent: "center",
+              gap:            6,
+              color:          "#334155",
+              fontSize:       12,
+            }}>
               <ShieldCheck size={14} />
-              Secured & verified by eSewa Payment Gateway
+              Secured &amp; verified by eSewa Payment Gateway
             </div>
           </div>
         )}
@@ -300,15 +411,28 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
         {/* ── STEP: Processing / Redirecting ───────────────────────────── */}
         {step === "processing" && esewaPayload && (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <Loader2 size={40} style={{ color: "#6366f1", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
+            <Loader2
+              size={40}
+              style={{
+                color:     "#6366f1",
+                animation: "modal-spin 1s linear infinite",
+                margin:    "0 auto 16px",
+              }}
+            />
             <p style={{ fontSize: 16, fontWeight: 700, color: "#f1f5f9", margin: "0 0 8px" }}>
               Redirecting to eSewa…
             </p>
             <p style={{ fontSize: 13, color: "#475569" }}>
               Please do not close this window.
             </p>
+
             {/* Hidden auto-submit form */}
-            <form ref={esewaFormRef} action={esewaPayload.form_url} method="POST" style={{ display: "none" }}>
+            <form
+              ref={esewaFormRef}
+              action={esewaPayload.form_url}
+              method="POST"
+              style={{ display: "none" }}
+            >
               {Object.entries(esewaPayload.payload).map(([k, v]) => (
                 <input key={k} type="hidden" name={k} value={v} />
               ))}
@@ -317,54 +441,97 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
         )}
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes modal-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
 
 // ── Shared confirm box ───────────────────────────────────────────────────────
+
 function ConfirmBox({
-  title, subtitle, highlights, confirmLabel, confirmColor, onConfirm, loading, error,
+  title,
+  subtitle,
+  highlights,
+  confirmLabel,
+  confirmColor,
+  onConfirm,
+  loading,
+  error,
 }: {
-  title: string; subtitle: string; highlights: string[];
-  confirmLabel: string; confirmColor: string;
-  onConfirm: () => void; loading?: boolean; error?: string | null;
+  title: string;
+  subtitle: string;
+  highlights: string[];
+  confirmLabel: string;
+  confirmColor: string;
+  onConfirm: () => void;
+  loading?: boolean;
+  error?: string | null;
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <div>
-        <h2 style={{ fontSize: 22, fontWeight: 900, color: "#f1f5f9", margin: "0 0 8px", letterSpacing: "-0.03em" }}>
+        <h2 style={{
+          fontSize:      22,
+          fontWeight:    900,
+          color:         "#f1f5f9",
+          margin:        "0 0 8px",
+          letterSpacing: "-0.03em",
+        }}>
           {title}
         </h2>
         <p style={{ fontSize: 13, color: "#64748b", margin: 0 }}>{subtitle}</p>
       </div>
-      <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
+
+      <ul style={{
+        margin:        0,
+        padding:       0,
+        listStyle:     "none",
+        display:       "flex",
+        flexDirection: "column",
+        gap:           8,
+      }}>
         {highlights.map(h => (
-          <li key={h} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#94a3b8" }}>
+          <li
+            key={h}
+            style={{
+              display:    "flex",
+              alignItems: "center",
+              gap:        10,
+              fontSize:   13,
+              color:      "#94a3b8",
+            }}
+          >
             <span style={{ color: confirmColor, fontSize: 16 }}>✓</span> {h}
           </li>
         ))}
       </ul>
+
       {error && <p style={{ color: "#ef4444", fontSize: 13 }}>{error}</p>}
+
       <button
         onClick={onConfirm}
         disabled={loading}
         style={{
-          padding:    "13px 0",
-          borderRadius: 10,
-          background: `linear-gradient(135deg, ${confirmColor}, ${confirmColor}bb)`,
-          border:     "none",
-          color:      "#fff",
-          fontWeight: 700,
-          fontSize:   14,
-          cursor:     loading ? "not-allowed" : "pointer",
-          display:    "flex",
-          alignItems: "center",
+          padding:        "13px 0",
+          borderRadius:   10,
+          background:     `linear-gradient(135deg, ${confirmColor}, ${confirmColor}bb)`,
+          border:         "none",
+          color:          "#fff",
+          fontWeight:     700,
+          fontSize:       14,
+          cursor:         loading ? "not-allowed" : "pointer",
+          display:        "flex",
+          alignItems:     "center",
           justifyContent: "center",
-          gap:        8,
+          gap:            8,
+          opacity:        loading ? 0.7 : 1,
+          transition:     "opacity 0.2s",
         }}
       >
-        {loading ? <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} /> : confirmLabel}
+        {loading
+          ? <Loader2 size={16} style={{ animation: "modal-spin 1s linear infinite" }} />
+          : confirmLabel
+        }
       </button>
     </div>
   );

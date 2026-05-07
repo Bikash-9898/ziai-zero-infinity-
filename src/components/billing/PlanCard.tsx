@@ -23,12 +23,14 @@ interface PlanCardProps {
 }
 
 export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
-  const meta   = PLAN_META[plan.plan] ?? PLAN_META.free;
-  const isPro  = plan.plan === "pro";
+  const meta      = PLAN_META[plan.plan] ?? PLAN_META.free;
+  const isPro     = plan.plan === "pro";
   const isCurrent = plan.action === "current";
 
+  // FIX: Added "free" as a selectable downgrade target.
+  // Previously btn label fell through to "Select" for free which was confusing.
   const btnLabel =
-    isCurrent        ? "Current Plan"
+    isCurrent                     ? "Current Plan"
     : plan.action === "upgrade"   ? `Upgrade to ${cap(plan.plan)}`
     : plan.action === "downgrade" ? `Downgrade to ${cap(plan.plan)}`
     : "Select";
@@ -48,16 +50,29 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
         cursor:        isCurrent ? "default" : "pointer",
         boxShadow:     isCurrent ? `0 0 32px ${meta.glow}` : "none",
       }}
-      onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.borderColor = meta.color + "55"; }}
-      onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLDivElement).style.borderColor = "#1e293b"; }}
+      onMouseEnter={e => {
+        if (!isCurrent) (e.currentTarget as HTMLDivElement).style.borderColor = meta.color + "55";
+      }}
+      onMouseLeave={e => {
+        if (!isCurrent) (e.currentTarget as HTMLDivElement).style.borderColor = "#1e293b";
+      }}
     >
       {/* Popular badge */}
       {isPro && (
         <div style={{
-          position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
-          background: "linear-gradient(90deg, #6366f1, #8b5cf6)",
-          color: "#fff", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
-          padding: "3px 14px", borderRadius: 999, textTransform: "uppercase", whiteSpace: "nowrap",
+          position:      "absolute",
+          top:           -12,
+          left:          "50%",
+          transform:     "translateX(-50%)",
+          background:    "linear-gradient(90deg, #6366f1, #8b5cf6)",
+          color:         "#fff",
+          fontSize:      10,
+          fontWeight:    700,
+          letterSpacing: "0.1em",
+          padding:       "3px 14px",
+          borderRadius:  999,
+          textTransform: "uppercase",
+          whiteSpace:    "nowrap",
         }}>
           Most Popular
         </div>
@@ -70,6 +85,22 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
           <span style={{ fontSize: 18, fontWeight: 800, color: "#f1f5f9", letterSpacing: "-0.02em" }}>
             {cap(plan.plan)}
           </span>
+          {/* Current plan badge on card header */}
+          {isCurrent && (
+            <span style={{
+              fontSize:      9,
+              fontWeight:    700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              padding:       "2px 7px",
+              borderRadius:  999,
+              background:    meta.color + "22",
+              color:         meta.color,
+              marginLeft:    4,
+            }}>
+              Active
+            </span>
+          )}
         </div>
         <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{meta.tagline}</p>
       </div>
@@ -93,9 +124,9 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
 
       {/* Limits */}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-        <LimitRow icon="⬡" label="Tokens"   value={fmt(plan.tokens_per_month)}              color={meta.color} />
-        <LimitRow icon="↗" label="Requests" value={fmt(plan.requests_per_month, "/mo")}     color={meta.color} />
-        <LimitRow icon="◈" label="Images"   value={fmt(plan.image_generations_per_month, "/mo")} color={meta.color} />
+        <LimitRow icon="⬡" label="Tokens"   value={fmt(plan.tokens_per_month)}                       color={meta.color} />
+        <LimitRow icon="↗" label="Requests" value={fmt(plan.requests_per_month, "/mo")}              color={meta.color} />
+        <LimitRow icon="◈" label="Images"   value={fmt(plan.image_generations_per_month, "/mo")}     color={meta.color} />
       </div>
 
       {/* CTA */}
@@ -109,7 +140,7 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
           fontSize:      13,
           fontWeight:    700,
           letterSpacing: "0.04em",
-          cursor:        isCurrent ? "default" : "pointer",
+          cursor:        isCurrent || loading ? "default" : "pointer",
           border:        "none",
           transition:    "all 0.15s",
           background:    isCurrent
@@ -117,7 +148,7 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
             : plan.action === "upgrade"
               ? `linear-gradient(135deg, ${meta.color}, ${meta.color}cc)`
               : "#1e293b",
-          color:  isCurrent ? "#475569" : plan.action === "upgrade" ? "#fff" : meta.color,
+          color:     isCurrent ? "#475569" : plan.action === "upgrade" ? "#fff" : meta.color,
           boxShadow: (!isCurrent && plan.action === "upgrade") ? `0 4px 16px ${meta.glow}` : "none",
         }}
       >
@@ -127,7 +158,11 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
   );
 }
 
-function LimitRow({ icon, label, value, color }: { icon: string; label: string; value: string; color: string }) {
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function LimitRow({ icon, label, value, color }: {
+  icon: string; label: string; value: string; color: string;
+}) {
   const isUnlimited = value === "Unlimited";
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>

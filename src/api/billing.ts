@@ -1,6 +1,8 @@
+// src/api/billing.ts
 // Billing API client for React frontend
 // Provides functions to interact with the backend billing and usage APIs
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
+const API = "http://localhost:8000";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -159,8 +161,8 @@ export const cancelSubscription = (userId: string): Promise<{ message: string; p
 export const initiateEsewa = (plan: string, userId: string): Promise<EsewaPayloadResponse> =>
   apiFetch(`/api/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
 
-export const initiateKhalti = (plan: string, userId: string): Promise<KhaltiInitiateResponse> =>
-  apiFetch(`/api/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
+// export const initiateKhalti = (plan: string, userId: string): Promise<KhaltiInitiateResponse> =>
+//   apiFetch(`/api/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
 
 // ── Usage ────────────────────────────────────────────────────────────────────
 

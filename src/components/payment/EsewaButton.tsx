@@ -1,3 +1,5 @@
+// src/components/payment/EsewaButton.tsx
+
 import { useState } from "react";
 import { initiateEsewa } from "../../api/billing";
 
@@ -31,8 +33,15 @@ export default function EsewaButton({ plan, userId }: EsewaButtonProps) {
 
       document.body.appendChild(form);
       form.submit();
+
+      // NOTE: setLoading(false) is intentionally NOT called here.
+      // The page will navigate away via form.submit(), so the spinner
+      // should remain visible. If submit fails silently, the catch block handles it.
     } catch (e) {
-      setError((e as Error).message ?? "Failed to initiate eSewa payment");
+      // FIX: Previously was `(e as Error).message ?? "..."` which would lose
+      // the actual error message if e was not an Error instance.
+      // Now properly handles both Error objects and unknown throws.
+      setError(e instanceof Error ? e.message : "Failed to initiate eSewa payment");
       setLoading(false);
     }
   };
@@ -98,7 +107,7 @@ export default function EsewaButton({ plan, userId }: EsewaButtonProps) {
           border: 2px solid rgba(255,255,255,0.3);
           border-top-color: #fff;
           border-radius: 50%;
-          animation: spin 0.7s linear infinite;
+          animation: esewa-spin 0.7s linear infinite;
         }
         .esewa-error {
           font-size: 12px;
@@ -106,7 +115,7 @@ export default function EsewaButton({ plan, userId }: EsewaButtonProps) {
           text-align: center;
           margin: 8px 0 0;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes esewa-spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );

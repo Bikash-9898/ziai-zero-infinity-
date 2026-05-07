@@ -1,27 +1,51 @@
+// src/components/billing/PaymentModal.tsx
+//
+// NOTE: This component is NOT used in the current client billing flow.
+// UpgradeModal handles plan selection + eSewa payment inline.
+// PaymentModal was an earlier design that separated plan selection from payment.
+//
+// Kept here in case it is needed for:
+//   - Admin-side manual payment triggering
+//   - Future Khalti integration (the KhaltiButton slot is already wired)
+//   - A/B testing an alternate payment UX
+//
+// Do NOT delete — may be needed for admin side.
+
 import { useState } from "react";
 import EsewaButton from "../payment/EsewaButton";
 // import KhaltiButton from "../payment/KhaltiButton";
 
 interface PaymentModalProps {
-  plan: string;
+  plan:     string;
   priceNPR: number;
-  userId: string;
-  onClose: () => void;
+  userId:   string;
+  onClose:  () => void;
 }
 
-export default function PaymentModal({ plan, priceNPR, userId, onClose }: PaymentModalProps) {
+export default function PaymentModal({
+  plan,
+  priceNPR,
+  userId,
+  onClose,
+}: PaymentModalProps) {
   const [selectedProvider, setSelectedProvider] = useState<"esewa" | "khalti" | null>(null);
 
   const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
 
   return (
-    <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div
+      className="modal-backdrop"
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
       <div className="modal-box">
+
         {/* Header */}
         <div className="modal-header">
           <div>
             <h2 className="modal-title">Complete Payment</h2>
-            <p className="modal-sub">Upgrading to <strong>{planLabel}</strong> plan</p>
+            <p className="modal-sub">
+              Upgrading to <strong>{planLabel}</strong> plan
+            </p>
           </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
@@ -65,14 +89,16 @@ export default function PaymentModal({ plan, priceNPR, userId, onClose }: Paymen
           {selectedProvider === "esewa" && (
             <EsewaButton plan={plan} userId={userId} />
           )}
-          {/* {selectedProvider === "khalti" && (
+          {/* Uncomment when Khalti is integrated:
+          {selectedProvider === "khalti" && (
             <KhaltiButton plan={plan} userId={userId} />
           )} */}
         </div>
 
-        {/* Footer note */}
+        {/* Footer */}
         <p className="modal-footer-note">
-          🔒 Payments are processed securely. Your subscription activates immediately after verification.
+          🔒 Payments are processed securely. Your subscription activates
+          immediately after verification.
         </p>
       </div>
 
@@ -103,7 +129,10 @@ export default function PaymentModal({ plan, priceNPR, userId, onClose }: Paymen
           animation: slideUp 0.2s cubic-bezier(0.4,0,0.2,1);
           box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px #ffffff08;
         }
-        @keyframes slideUp { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
+        @keyframes slideUp {
+          from { transform: translateY(16px); opacity: 0 }
+          to   { transform: none; opacity: 1 }
+        }
         .modal-header {
           display: flex;
           justify-content: space-between;
@@ -116,11 +145,7 @@ export default function PaymentModal({ plan, priceNPR, userId, onClose }: Paymen
           margin: 0 0 4px;
           letter-spacing: -0.02em;
         }
-        .modal-sub {
-          font-size: 13px;
-          color: #64748b;
-          margin: 0;
-        }
+        .modal-sub { font-size: 13px; color: #64748b; margin: 0; }
         .modal-sub strong { color: #94a3b8; }
         .modal-close {
           background: #1e293b;
@@ -197,20 +222,21 @@ export default function PaymentModal({ plan, priceNPR, userId, onClose }: Paymen
           font-weight: 900;
           color: #fff;
         }
-        .esewa-logo { background: #60bb46; }
+        .esewa-logo  { background: #60bb46; }
         .khalti-logo { background: #5c2d91; }
-        .provider-name {
-          font-size: 14px;
-          font-weight: 600;
-          color: #e2e8f0;
-        }
+        .provider-name { font-size: 14px; font-weight: 600; color: #e2e8f0; }
         .provider-tag {
           font-size: 10px;
           color: #64748b;
           text-transform: uppercase;
           letter-spacing: 0.06em;
         }
-        .pay-action { min-height: 44px; display: flex; flex-direction: column; align-items: stretch; }
+        .pay-action {
+          min-height: 44px;
+          display: flex;
+          flex-direction: column;
+          align-items: stretch;
+        }
         .select-hint {
           font-size: 13px;
           color: #475569;
