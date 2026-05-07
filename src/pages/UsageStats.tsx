@@ -23,209 +23,54 @@ export default function UsageStats() {
     : 1;
 
   return (
-    <div className="usage-page">
+    <div className="min-h-screen bg-[#060c18] text-slate-100 font-['Syne',sans-serif] px-6 py-12 pb-20 max-sm:px-4 max-sm:py-6 max-sm:pb-15">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
         * { box-sizing: border-box; }
-        .usage-page {
-          min-height: 100vh;
-          background: #060c18;
-          color: #f1f5f9;
-          font-family: 'Syne', sans-serif;
-          padding: 48px 24px 80px;
-        }
-        .usage-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
-        h1 {
-          font-size: 32px;
-          font-weight: 800;
-          letter-spacing: -0.04em;
-          margin: 0 0 6px;
-          background: linear-gradient(135deg, #f1f5f9, #94a3b8);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        .page-sub { font-size: 15px; color: #475569; margin: 0; }
-
-        /* Cards */
-        .card {
-          background: #0f172a;
-          border: 1px solid #1e293b;
-          border-radius: 16px;
-          padding: 24px 28px;
-        }
-        .card-title {
-          font-size: 11px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.12em;
-          color: #475569;
-          margin: 0 0 20px;
-        }
-
-        /* Usage bars */
-        .bars-grid { display: flex; flex-direction: column; gap: 20px; }
-
-        /* Period info */
-        .period-strip {
-          display: flex;
-          gap: 24px;
-          padding: 14px 18px;
-          background: #1e293b;
-          border-radius: 10px;
-          margin-bottom: 20px;
-          flex-wrap: wrap;
-        }
-        .period-item { display: flex; flex-direction: column; gap: 2px; }
-        .period-key {
-          font-size: 10px;
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          color: #475569;
-        }
-        .period-val {
-          font-size: 13px;
-          font-family: 'JetBrains Mono', monospace;
-          color: #94a3b8;
-        }
-
-        /* Summary row */
-        .summary-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
-        .summary-card {
-          background: #1e293b;
-          border-radius: 12px;
-          padding: 16px 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .summary-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; }
-        .summary-val {
-          font-size: 22px;
-          font-weight: 800;
-          color: #f1f5f9;
-          letter-spacing: -0.03em;
-          font-variant-numeric: tabular-nums;
-        }
-
-        /* Chart */
-        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .days-tabs { display: flex; gap: 4px; }
-        .day-tab {
-          padding: 5px 12px;
-          border-radius: 8px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          border: 1px solid transparent;
-          background: transparent;
-          color: #475569;
-          font-family: 'Syne', sans-serif;
-          transition: all 0.15s;
-        }
-        .day-tab.active { background: #1e293b; border-color: #334155; color: #94a3b8; }
-        .day-tab:hover { color: #cbd5e1; }
-        .bar-chart { display: flex; align-items: flex-end; gap: 3px; height: 100px; }
-        .bar-col {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 4px;
-          height: 100%;
-          justify-content: flex-end;
-        }
-        .bar-seg {
-          width: 100%;
-          border-radius: 4px 4px 0 0;
-          background: linear-gradient(180deg, #6366f1, #4338ca);
-          min-height: 2px;
-          transition: height 0.4s cubic-bezier(0.4,0,0.2,1);
-          cursor: pointer;
-        }
-        .bar-seg:hover { filter: brightness(1.3); }
-        .bar-label { font-size: 9px; color: #334155; white-space: nowrap; }
-
-        /* Top models */
-        .model-list { display: flex; flex-direction: column; gap: 12px; }
-        .model-row { display: flex; align-items: center; gap: 12px; }
-        .model-name { font-size: 13px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; width: 160px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .model-bar-wrap { flex: 1; height: 6px; background: #1e293b; border-radius: 999px; overflow: hidden; }
-        .model-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #6366f1, #8b5cf6); }
-        .model-count { font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #475569; width: 40px; text-align: right; flex-shrink: 0; }
-
-        /* Request history */
-        .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        .history-table th {
-          text-align: left;
-          font-size: 10px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: #334155;
-          padding: 0 0 12px;
-          border-bottom: 1px solid #1e293b;
-        }
-        .history-table td { padding: 12px 0; border-bottom: 1px solid #0f172a; color: #94a3b8; }
-        .history-table tr:last-child td { border-bottom: none; }
-        .history-table td:first-child { color: #f1f5f9; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-        .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-
-        /* Pagination */
-        .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 16px; }
-        .page-btn {
-          padding: 6px 14px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          border: 1px solid #1e293b;
-          background: transparent;
-          color: #64748b;
-          font-family: 'Syne', sans-serif;
-          transition: all 0.15s;
-        }
-        .page-btn:hover:not(:disabled) { background: #1e293b; color: #cbd5e1; }
-        .page-btn.active { background: #1e293b; border-color: #6366f1; color: #6366f1; }
-        .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        .loading-block { height: 120px; background: linear-gradient(90deg, #0f172a, #1e293b, #0f172a); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 10px; }
         @keyframes shimmer { to { background-position: -200% 0; } }
-
-        @media (max-width: 640px) {
-          .usage-page { padding: 24px 16px 60px; }
-        }
       `}</style>
 
-      <div className="usage-inner">
+      <div className="max-w-[1100px] mx-auto flex flex-col gap-10">
+
+        {/* Header */}
         <div>
-          <h1>Usage & Analytics</h1>
-          <p className="page-sub">Monitor your AI usage, token consumption, and request history</p>
+          <h1 className="text-[32px] font-extrabold tracking-[-0.04em] mb-1.5 mt-0 bg-linear-to-br from-slate-100 to-slate-400 bg-clip-text text-transparent">
+            Usage &amp; Analytics
+          </h1>
+          <p className="text-[15px] text-slate-500 m-0">
+            Monitor your AI usage, token consumption, and request history
+          </p>
         </div>
 
         {/* Current period usage bars */}
-        <div className="card">
-          <p className="card-title">Current Period Usage</p>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl px-7 py-6">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 mb-5 mt-0">
+            Current Period Usage
+          </p>
           {usage && (
-            <div className="period-strip">
-              <div className="period-item">
-                <span className="period-key">Plan</span>
-                <span className="period-val">{usage.plan}</span>
+            <div className="flex gap-6 px-[18px] py-3.5 bg-slate-800 rounded-[10px] mb-5 flex-wrap">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Plan</span>
+                <span className="text-[13px] font-['JetBrains_Mono',monospace] text-slate-400">{usage.plan}</span>
               </div>
-              <div className="period-item">
-                <span className="period-key">Period Start</span>
-                <span className="period-val">{new Date(usage.period_start).toLocaleDateString("en-NP")}</span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Period Start</span>
+                <span className="text-[13px] font-['JetBrains_Mono',monospace] text-slate-400">
+                  {new Date(usage.period_start).toLocaleDateString("en-NP")}
+                </span>
               </div>
-              <div className="period-item">
-                <span className="period-key">Period End</span>
-                <span className="period-val">{new Date(usage.period_end).toLocaleDateString("en-NP")}</span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Period End</span>
+                <span className="text-[13px] font-['JetBrains_Mono',monospace] text-slate-400">
+                  {new Date(usage.period_end).toLocaleDateString("en-NP")}
+                </span>
               </div>
             </div>
           )}
           {usageLoading ? (
-            <div className="loading-block" />
+            <div className="h-[120px] rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
           ) : usage ? (
-            <div className="bars-grid">
+            <div className="flex flex-col gap-5">
               <UsageBar
                 label="Tokens"
                 used={usage.tokens_used}
@@ -256,72 +101,101 @@ export default function UsageStats() {
 
         {/* Summary cards */}
         {summary && (
-          <div className="summary-row">
-            <div className="summary-card">
-              <span className="summary-label">Total Tokens</span>
-              <span className="summary-val">{formatTokens(summary.daily_tokens.reduce((a, d) => a + d.tokens, 0))}</span>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
+            <div className="bg-slate-800 rounded-xl px-[18px] py-4 flex flex-col gap-1">
+              <span className="text-[11px] text-slate-500 uppercase tracking-[0.08em]">Total Tokens</span>
+              <span className="text-[22px] font-extrabold text-slate-100 tracking-[-0.03em] tabular-nums">
+                {formatTokens(summary.daily_tokens.reduce((a, d) => a + d.tokens, 0))}
+              </span>
             </div>
-            <div className="summary-card">
-              <span className="summary-label">Total Requests</span>
-              <span className="summary-val">{summary.daily_tokens.reduce((a, d) => a + d.requests, 0).toLocaleString()}</span>
+            <div className="bg-slate-800 rounded-xl px-[18px] py-4 flex flex-col gap-1">
+              <span className="text-[11px] text-slate-500 uppercase tracking-[0.08em]">Total Requests</span>
+              <span className="text-[22px] font-extrabold text-slate-100 tracking-[-0.03em] tabular-nums">
+                {summary.daily_tokens.reduce((a, d) => a + d.requests, 0).toLocaleString()}
+              </span>
             </div>
-            <div className="summary-card">
-              <span className="summary-label">Total Cost</span>
-              <span className="summary-val">NPR {Number(summary.total_cost).toFixed(2)}</span>
+            <div className="bg-slate-800 rounded-xl px-[18px] py-4 flex flex-col gap-1">
+              <span className="text-[11px] text-slate-500 uppercase tracking-[0.08em]">Total Cost</span>
+              <span className="text-[22px] font-extrabold text-slate-100 tracking-[-0.03em] tabular-nums">
+                NPR {Number(summary.total_cost).toFixed(2)}
+              </span>
             </div>
-            <div className="summary-card">
-              <span className="summary-label">Avg Latency</span>
-              <span className="summary-val">{summary.avg_latency_ms ? `${Math.round(summary.avg_latency_ms)}ms` : "—"}</span>
+            <div className="bg-slate-800 rounded-xl px-[18px] py-4 flex flex-col gap-1">
+              <span className="text-[11px] text-slate-500 uppercase tracking-[0.08em]">Avg Latency</span>
+              <span className="text-[22px] font-extrabold text-slate-100 tracking-[-0.03em] tabular-nums">
+                {summary.avg_latency_ms ? `${Math.round(summary.avg_latency_ms)}ms` : "—"}
+              </span>
             </div>
           </div>
         )}
 
         {/* Daily chart */}
-        <div className="card">
-          <div className="chart-header">
-            <p className="card-title" style={{ margin: 0 }}>Daily Token Usage</p>
-            <div className="days-tabs">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl px-7 py-6">
+          <div className="flex justify-between items-center mb-5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 m-0">
+              Daily Token Usage
+            </p>
+            <div className="flex gap-1">
               {[7, 14, 30].map((d) => (
-                <button key={d} className={`day-tab ${days === d ? "active" : ""}`} onClick={() => setDays(d)}>
+                <button
+                  key={d}
+                  onClick={() => setDays(d)}
+                  className={`px-3 py-[5px] rounded-lg text-xs font-semibold cursor-pointer border transition-all duration-150 font-['Syne',sans-serif] ${
+                    days === d
+                      ? "bg-slate-800 border-slate-700 text-slate-400"
+                      : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
+                  }`}
+                >
                   {d}d
                 </button>
               ))}
             </div>
           </div>
           {summaryLoading ? (
-            <div className="loading-block" />
+            <div className="h-[120px] rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
           ) : summary && summary.daily_tokens.length > 0 ? (
-            <div className="bar-chart">
+            <div className="flex items-end gap-[3px] h-[100px]">
               {summary.daily_tokens.map((d) => (
-                <div key={d.date} className="bar-col">
+                <div key={d.date} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
                   <div
-                    className="bar-seg"
+                    className="w-full rounded-t-[4px] bg-linear-to-b from-indigo-500 to-indigo-700 min-h-[2px] transition-[height] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer hover:brightness-125"
                     style={{ height: `${Math.max((d.tokens / maxDailyTokens) * 100, 2)}%` }}
                     title={`${new Date(d.date).toLocaleDateString("en-NP")}: ${formatTokens(d.tokens)} tokens, ${d.requests} requests`}
                   />
-                  <span className="bar-label">{new Date(d.date).toLocaleDateString("en-NP", { day: "2-digit", month: "2-digit" })}</span>
+                  <span className="text-[9px] text-slate-700 whitespace-nowrap">
+                    {new Date(d.date).toLocaleDateString("en-NP", { day: "2-digit", month: "2-digit" })}
+                  </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p style={{ color: "#334155", fontSize: 13, textAlign: "center", padding: "32px 0" }}>No data for this period</p>
+            <p className="text-slate-700 text-[13px] text-center py-8">No data for this period</p>
           )}
         </div>
 
         {/* Top models */}
         {summary && summary.top_models.length > 0 && (
-          <div className="card">
-            <p className="card-title">Top Models Used</p>
-            <div className="model-list">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl px-7 py-6">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 mb-5 mt-0">
+              Top Models Used
+            </p>
+            <div className="flex flex-col gap-3">
               {summary.top_models.map((m) => {
                 const maxCount = summary.top_models[0]?.count ?? 1;
                 return (
-                  <div key={m.model} className="model-row">
-                    <span className="model-name">{m.model}</span>
-                    <div className="model-bar-wrap">
-                      <div className="model-bar-fill" style={{ width: `${(m.count / maxCount) * 100}%` }} />
+                  <div key={m.model} className="flex items-center gap-3">
+                    <span className="text-[13px] text-slate-400 font-['JetBrains_Mono',monospace] w-40 shrink-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {m.model}
+                    </span>
+                    <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-linear-to-r from-indigo-500 to-violet-500"
+                        style={{ width: `${(m.count / maxCount) * 100}%` }}
+                      />
                     </div>
-                    <span className="model-count">{m.count}</span>
+                    <span className="text-xs font-['JetBrains_Mono',monospace] text-slate-500 w-10 text-right shrink-0">
+                      {m.count}
+                    </span>
                   </div>
                 );
               })}
@@ -330,55 +204,101 @@ export default function UsageStats() {
         )}
 
         {/* Request history */}
-        <div className="card">
-          <p className="card-title">Request History ({total.toLocaleString()} total)</p>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl px-7 py-6">
+          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 mb-5 mt-0">
+            Request History ({total.toLocaleString()} total)
+          </p>
           {histLoading ? (
-            <div className="loading-block" />
+            <div className="h-[120px] rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
           ) : (
             <>
-              <table className="history-table">
+              <table className="w-full border-collapse text-[13px]">
                 <thead>
                   <tr>
-                    <th>Model</th>
-                    <th>Tokens In</th>
-                    <th>Tokens Out</th>
-                    <th>Cost</th>
-                    <th>Latency</th>
-                    <th>Status</th>
-                    <th>Time</th>
+                    {["Model", "Tokens In", "Tokens Out", "Cost", "Latency", "Status", "Time"].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left text-[10px] font-bold uppercase tracking-widest text-slate-700 pb-3 border-b border-slate-800"
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {requests.map((r) => (
                     <tr key={r.id}>
-                      <td>{r.model}</td>
-                      <td className="mono">{r.tokens_input?.toLocaleString() ?? "—"}</td>
-                      <td className="mono">{r.tokens_output?.toLocaleString() ?? "—"}</td>
-                      <td className="mono">{r.cost != null ? `NPR ${Number(r.cost).toFixed(4)}` : "—"}</td>
-                      <td className="mono">{r.latency_ms != null ? `${r.latency_ms}ms` : "—"}</td>
-                      <td>
-                        <span className="status-dot" style={{ background: STATUS_COLORS[r.status] ?? "#64748b" }} />
+                      <td className="py-3 border-b border-[#0f172a] text-slate-100 font-['JetBrains_Mono',monospace] text-xs last:border-b-0">
+                        {r.model}
+                      </td>
+                      <td className="py-3 border-b border-[#0f172a] text-slate-400 font-['JetBrains_Mono',monospace] last:border-b-0">
+                        {r.tokens_input?.toLocaleString() ?? "—"}
+                      </td>
+                      <td className="py-3 border-b border-[#0f172a] text-slate-400 font-['JetBrains_Mono',monospace] last:border-b-0">
+                        {r.tokens_output?.toLocaleString() ?? "—"}
+                      </td>
+                      <td className="py-3 border-b border-[#0f172a] text-slate-400 font-['JetBrains_Mono',monospace] last:border-b-0">
+                        {r.cost != null ? `NPR ${Number(r.cost).toFixed(4)}` : "—"}
+                      </td>
+                      <td className="py-3 border-b border-[#0f172a] text-slate-400 font-['JetBrains_Mono',monospace] last:border-b-0">
+                        {r.latency_ms != null ? `${r.latency_ms}ms` : "—"}
+                      </td>
+                      <td className="py-3 border-b border-[#0f172a] text-slate-400 last:border-b-0">
+                        <span
+                          className="inline-block w-[7px] h-[7px] rounded-full mr-1.5"
+                          style={{ background: STATUS_COLORS[r.status] ?? "#64748b" }}
+                        />
                         {r.status}
                       </td>
-                      <td className="mono" style={{ fontSize: 11, color: "#475569" }}>
-                        {new Date(r.created_at).toLocaleString("en-NP", { hour12: false, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      <td className="py-3 border-b border-[#0f172a] text-slate-500 font-['JetBrains_Mono',monospace] text-[11px] last:border-b-0">
+                        {new Date(r.created_at).toLocaleString("en-NP", {
+                          hour12: false,
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
               {totalPages > 1 && (
-                <div className="pagination">
-                  <button className="page-btn" onClick={() => goToPage(page - 1)} disabled={page === 1}>←</button>
+                <div className="flex gap-2 justify-center mt-4">
+                  <button
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page === 1}
+                    className="px-3.5 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer border border-slate-800 bg-transparent text-slate-500 font-['Syne',sans-serif] transition-all duration-150 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    ←
+                  </button>
                   {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map((p) => (
-                    <button key={p} className={`page-btn ${p === page ? "active" : ""}`} onClick={() => goToPage(p)}>{p}</button>
+                    <button
+                      key={p}
+                      onClick={() => goToPage(p)}
+                      className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer border font-['Syne',sans-serif] transition-all duration-150 hover:bg-slate-800 hover:text-slate-300 ${
+                        p === page
+                          ? "bg-slate-800 border-indigo-500 text-indigo-400"
+                          : "bg-transparent border-slate-800 text-slate-500"
+                      }`}
+                    >
+                      {p}
+                    </button>
                   ))}
-                  <button className="page-btn" onClick={() => goToPage(page + 1)} disabled={page === totalPages}>→</button>
+                  <button
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page === totalPages}
+                    className="px-3.5 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer border border-slate-800 bg-transparent text-slate-500 font-['Syne',sans-serif] transition-all duration-150 hover:bg-slate-800 hover:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    →
+                  </button>
                 </div>
               )}
             </>
           )}
         </div>
+
       </div>
     </div>
   );

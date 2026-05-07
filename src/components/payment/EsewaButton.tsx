@@ -38,9 +38,6 @@ export default function EsewaButton({ plan, userId }: EsewaButtonProps) {
       // The page will navigate away via form.submit(), so the spinner
       // should remain visible. If submit fails silently, the catch block handles it.
     } catch (e) {
-      // FIX: Previously was `(e as Error).message ?? "..."` which would lose
-      // the actual error message if e was not an Error instance.
-      // Now properly handles both Error objects and unknown throws.
       setError(e instanceof Error ? e.message : "Failed to initiate eSewa payment");
       setLoading(false);
     }
@@ -51,72 +48,27 @@ export default function EsewaButton({ plan, userId }: EsewaButtonProps) {
       <button
         onClick={handlePay}
         disabled={loading}
-        className="esewa-btn"
+        className="w-full flex items-center justify-center gap-2.5 px-5 py-3.25 bg-linear-to-br from-[#60bb46] to-[#4da038] text-white text-[15px] font-bold border-none rounded-xl cursor-pointer transition-[filter,transform] duration-200 shadow-[0_4px_20px_#60bb4644] tracking-[0.01em] hover:not-disabled:brightness-110 hover:not-disabled:-translate-y-px disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {loading ? (
-          <span className="esewa-spinner" />
+          <span className="inline-block w-4.5 h-4.5 border-2 border-white/30 border-t-white rounded-full animate-[esewa-spin_0.7s_linear_infinite]" />
         ) : (
           <>
-            <span className="esewa-logo-mark">e</span>
+            <span className="w-6 h-6 rounded-md bg-white/25 flex items-center justify-center text-sm font-black shrink-0">
+              e
+            </span>
             Pay with eSewa
           </>
         )}
       </button>
-      {error && <p className="esewa-error">{error}</p>}
 
-      <style>{`
-        .esewa-btn {
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          padding: 13px 20px;
-          background: linear-gradient(135deg, #60bb46, #4da038);
-          color: #fff;
-          font-size: 15px;
-          font-weight: 700;
-          border: none;
-          border-radius: 12px;
-          cursor: pointer;
-          transition: filter 0.2s, transform 0.15s;
-          box-shadow: 0 4px 20px #60bb4644;
-          letter-spacing: 0.01em;
-        }
-        .esewa-btn:hover:not(:disabled) {
-          filter: brightness(1.1);
-          transform: translateY(-1px);
-        }
-        .esewa-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .esewa-logo-mark {
-          width: 24px;
-          height: 24px;
-          border-radius: 6px;
-          background: rgba(255,255,255,0.25);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          font-weight: 900;
-          flex-shrink: 0;
-        }
-        .esewa-spinner {
-          display: inline-block;
-          width: 18px;
-          height: 18px;
-          border: 2px solid rgba(255,255,255,0.3);
-          border-top-color: #fff;
-          border-radius: 50%;
-          animation: esewa-spin 0.7s linear infinite;
-        }
-        .esewa-error {
-          font-size: 12px;
-          color: #ef4444;
-          text-align: center;
-          margin: 8px 0 0;
-        }
-        @keyframes esewa-spin { to { transform: rotate(360deg); } }
-      `}</style>
+      {error && (
+        <p className="text-xs text-red-500 text-center mt-2 mb-0">
+          {error}
+        </p>
+      )}
+
+      <style>{`@keyframes esewa-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { useAuth } from '@/context/useAuth';
 
 const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const navitems = [
     { name: 'Home', path : '/' },
@@ -46,7 +47,9 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
         {/* Right Side Actions */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           {user ? (
-            <div className="flex max-w-[46vw] items-center gap-1.5 bg-white/5 border border-white/10 pl-1.5 pr-1 py-1 rounded-full sm:max-w-none sm:gap-2">
+            <div 
+              onClick={() => navigate('/client')} 
+              className="cursor-pointer flex max-w-[46vw] items-center gap-1.5 bg-white/5 border border-white/10 pl-1.5 pr-1 py-1 rounded-full sm:max-w-none sm:gap-2">
               <div className="flex items-center gap-2 px-2">
                 <div className="w-6 h-6 shrink-0 rounded-full bg-purple-500/20 flex items-center justify-center">
                   <User size={14} className="text-purple-400" />

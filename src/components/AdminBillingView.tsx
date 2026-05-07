@@ -32,24 +32,24 @@ interface BillingStats {
 // ── Sub-components ────────────────────────────────────────────
 function StatCard({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
-    <div style={{ background: '#0d1224', border: '1px solid #1e293b', borderRadius: 12, padding: '16px 20px' }}>
-      <p style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#475569', margin: '0 0 8px' }}>{label}</p>
-      <p style={{ fontSize: 22, fontWeight: 900, color, letterSpacing: '-0.03em', margin: '0 0 2px', fontVariantNumeric: 'tabular-nums' }}>{value}</p>
-      <p style={{ fontSize: 11, color: '#334155', margin: 0 }}>{sub}</p>
+    <div className="bg-[#0d1224] border border-slate-800 rounded-xl px-5 py-4">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 mt-0">{label}</p>
+      <p className="text-[22px] font-black tracking-[-0.03em] tabular-nums mb-0.5 mt-0" style={{ color }}>{value}</p>
+      <p className="text-[11px] text-slate-700 m-0">{sub}</p>
     </div>
   );
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, [string, string]> = {
-    success:  ['#22c55e22', '#22c55e'],
-    pending:  ['#f59e0b22', '#f59e0b'],
-    failed:   ['#ef444422', '#ef4444'],
-    refunded: ['#6366f122', '#6366f1'],
+  const colors: Record<string, string> = {
+    success:  'bg-green-500/10 text-green-500',
+    pending:  'bg-amber-500/10 text-amber-500',
+    failed:   'bg-red-500/10 text-red-500',
+    refunded: 'bg-indigo-500/10 text-indigo-500',
   };
-  const [bg, fg] = colors[status] ?? ['#33415522', '#64748b'];
+  const cls = colors[status] ?? 'bg-slate-700/10 text-slate-500';
   return (
-    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '3px 8px', borderRadius: 999, background: bg, color: fg }}>
+    <span className={`text-[10px] font-bold uppercase tracking-[0.06em] px-2 py-0.75 rounded-full ${cls}`}>
       {status}
     </span>
   );
@@ -57,9 +57,13 @@ function StatusBadge({ status }: { status: string }) {
 
 function Skeleton({ height = 60 }: { height?: number }) {
   return (
-    <div style={{ height, background: 'linear-gradient(90deg,#0d1224,#1e293b,#0d1224)', backgroundSize: '200% 100%', borderRadius: 10, animation: 'shimmer 1.5s infinite' }}>
+    <>
+      <div
+        className="rounded-[10px] bg-linear-to-r from-[#0d1224] via-slate-800 to-[#0d1224] bg-size-[200%_100%] animate-[shimmer_1.5s_infinite]"
+        style={{ height }}
+      />
       <style>{`@keyframes shimmer { to { background-position: -200% 0; } }`}</style>
-    </div>
+    </>
   );
 }
 
@@ -80,13 +84,13 @@ export default function AdminBillingView() {
   }, []);
 
   if (loading) return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="flex flex-col gap-4">
       {[1, 2, 3].map(i => <Skeleton key={i} height={80} />)}
     </div>
   );
 
   if (error) return (
-    <div style={{ color: '#ef4444', background: '#ef444411', border: '1px solid #ef444433', borderRadius: 10, padding: '14px 18px', fontSize: 13 }}>
+    <div className="text-red-500 bg-red-500/5 border border-red-500/20 rounded-[10px] px-4.5 py-3.5 text-[13px]">
       {error} — check that <code>/api/admin/billing/stats</code> is implemented.
     </div>
   );
@@ -101,10 +105,10 @@ export default function AdminBillingView() {
   const totalUsers = Object.values(data.plan_distribution).reduce((a, b) => a + b, 0) || 1;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="flex flex-col gap-6">
 
       {/* Revenue summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3.5">
         <StatCard label="Total Revenue"        value={`NPR ${data.total_revenue.toLocaleString()}`}   sub="all time"     color="#6366f1" />
         <StatCard label="Active Subscriptions" value={String(data.active_subscriptions)}              sub="paying users" color="#06b6d4" />
         <StatCard label="Total Users"          value={String(totalUsers)}                             sub="registered"   color="#64748b" />
@@ -112,22 +116,25 @@ export default function AdminBillingView() {
       </div>
 
       {/* Plan distribution */}
-      <div style={{ background: '#0d1224', border: '1px solid #1e293b', borderRadius: 14, padding: '20px 24px' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 18px' }}>
+      <div className="bg-[#0d1224] border border-slate-800 rounded-2xl px-6 py-5">
+        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4.5 mt-0">
           Plan Distribution
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="flex flex-col gap-3.5">
           {(['enterprise', 'pro', 'basic', 'free'] as const).map(plan => {
             const count = data.plan_distribution[plan] ?? 0;
             const pct   = Math.round((count / totalUsers) * 100);
             const color = PLAN_COLORS[plan];
             return (
-              <div key={plan} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ width: 72, fontSize: 12, fontWeight: 600, color, textTransform: 'capitalize' }}>{plan}</span>
-                <div style={{ flex: 1, height: 8, background: '#1e293b', borderRadius: 999, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg,${color}cc,${color})`, borderRadius: 999, transition: 'width 0.6s ease' }} />
+              <div key={plan} className="flex items-center gap-3">
+                <span className="w-18 text-xs font-semibold capitalize" style={{ color }}>{plan}</span>
+                <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-[width] duration-600 ease-in-out"
+                    style={{ width: `${pct}%`, background: `linear-gradient(90deg,${color}cc,${color})` }}
+                  />
                 </div>
-                <span style={{ fontSize: 12, color: '#64748b', fontFamily: 'monospace', width: 56, textAlign: 'right' }}>
+                <span className="text-xs text-slate-500 font-mono w-14 text-right shrink-0">
                   {count} ({pct}%)
                 </span>
               </div>
@@ -137,18 +144,21 @@ export default function AdminBillingView() {
       </div>
 
       {/* Recent payments */}
-      <div style={{ background: '#0d1224', border: '1px solid #1e293b', borderRadius: 14, padding: '20px 24px' }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 18px' }}>
+      <div className="bg-[#0d1224] border border-slate-800 rounded-2xl px-6 py-5">
+        <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4.5 mt-0">
           Recent Payments
         </p>
         {data.recent_payments.length === 0 ? (
-          <p style={{ fontSize: 13, color: '#334155' }}>No payment records yet.</p>
+          <p className="text-[13px] text-slate-700">No payment records yet.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+          <table className="w-full border-collapse text-xs">
             <thead>
               <tr>
                 {['Date', 'Plan', 'Amount', 'Provider', 'Status'].map(h => (
-                  <th key={h} style={{ textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#334155', paddingBottom: 10, borderBottom: '1px solid #1e293b' }}>
+                  <th
+                    key={h}
+                    className="text-left text-[10px] font-bold uppercase tracking-[0.08em] text-slate-700 pb-2.5 border-b border-slate-800"
+                  >
                     {h}
                   </th>
                 ))}
@@ -157,19 +167,21 @@ export default function AdminBillingView() {
             <tbody>
               {data.recent_payments.map(p => (
                 <tr key={p.id}>
-                  <td style={{ padding: '10px 0', borderBottom: '1px solid #0f172a', color: '#475569', fontFamily: 'monospace', fontSize: 11 }}>
+                  <td className="py-2.5 border-b border-[#0f172a] text-slate-500 font-mono text-[11px]">
                     {new Date(p.created_at).toLocaleDateString('en-NP')}
                   </td>
-                  <td style={{ padding: '10px 0', borderBottom: '1px solid #0f172a' }}>
-                    <span style={{ color: PLAN_COLORS[p.plan] ?? '#64748b', fontWeight: 600, textTransform: 'capitalize' }}>{p.plan}</span>
+                  <td className="py-2.5 border-b border-[#0f172a]">
+                    <span className="font-semibold capitalize" style={{ color: PLAN_COLORS[p.plan] ?? '#64748b' }}>
+                      {p.plan}
+                    </span>
                   </td>
-                  <td style={{ padding: '10px 0', borderBottom: '1px solid #0f172a', color: '#94a3b8', fontFamily: 'monospace' }}>
+                  <td className="py-2.5 border-b border-[#0f172a] text-slate-400 font-mono">
                     NPR {Number(p.amount).toLocaleString()}
                   </td>
-                  <td style={{ padding: '10px 0', borderBottom: '1px solid #0f172a', color: '#64748b', textTransform: 'capitalize' }}>
+                  <td className="py-2.5 border-b border-[#0f172a] text-slate-500 capitalize">
                     {p.provider}
                   </td>
-                  <td style={{ padding: '10px 0', borderBottom: '1px solid #0f172a' }}>
+                  <td className="py-2.5 border-b border-[#0f172a]">
                     <StatusBadge status={p.status} />
                   </td>
                 </tr>
@@ -178,6 +190,7 @@ export default function AdminBillingView() {
           </table>
         )}
       </div>
+
     </div>
   );
 }

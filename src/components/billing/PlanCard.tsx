@@ -37,18 +37,12 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
 
   return (
     <div
+      className="relative flex flex-col gap-5 rounded-2xl p-7 transition-[border-color,transform] duration-200"
       style={{
-        position:      "relative",
-        background:    isCurrent ? `linear-gradient(135deg, ${meta.glow}, #0f172a)` : "#0f172a",
-        border:        `1px solid ${isCurrent ? meta.color + "66" : "#1e293b"}`,
-        borderRadius:  16,
-        padding:       "28px 24px",
-        display:       "flex",
-        flexDirection: "column",
-        gap:           20,
-        transition:    "border-color 0.2s, transform 0.2s",
-        cursor:        isCurrent ? "default" : "pointer",
-        boxShadow:     isCurrent ? `0 0 32px ${meta.glow}` : "none",
+        background:   isCurrent ? `linear-gradient(135deg, ${meta.glow}, #0f172a)` : "#0f172a",
+        border:       `1px solid ${isCurrent ? meta.color + "66" : "#1e293b"}`,
+        cursor:       isCurrent ? "default" : "pointer",
+        boxShadow:    isCurrent ? `0 0 32px ${meta.glow}` : "none",
       }}
       onMouseEnter={e => {
         if (!isCurrent) (e.currentTarget as HTMLDivElement).style.borderColor = meta.color + "55";
@@ -59,97 +53,72 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
     >
       {/* Popular badge */}
       {isPro && (
-        <div style={{
-          position:      "absolute",
-          top:           -12,
-          left:          "50%",
-          transform:     "translateX(-50%)",
-          background:    "linear-gradient(90deg, #6366f1, #8b5cf6)",
-          color:         "#fff",
-          fontSize:      10,
-          fontWeight:    700,
-          letterSpacing: "0.1em",
-          padding:       "3px 14px",
-          borderRadius:  999,
-          textTransform: "uppercase",
-          whiteSpace:    "nowrap",
-        }}>
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-linear-to-r from-indigo-500 to-violet-500 text-white text-[10px] font-bold tracking-widest px-3.5 py-0.5 rounded-full uppercase whitespace-nowrap">
           Most Popular
         </div>
       )}
 
       {/* Header */}
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-          <span style={{ fontSize: 22, color: meta.color }}>{meta.icon}</span>
-          <span style={{ fontSize: 18, fontWeight: 800, color: "#f1f5f9", letterSpacing: "-0.02em" }}>
+        <div className="flex items-center gap-2.5 mb-1.5">
+          <span className="text-[22px]" style={{ color: meta.color }}>{meta.icon}</span>
+          <span className="text-[18px] font-extrabold text-slate-100 tracking-tight">
             {cap(plan.plan)}
           </span>
           {/* Current plan badge on card header */}
           {isCurrent && (
-            <span style={{
-              fontSize:      9,
-              fontWeight:    700,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              padding:       "2px 7px",
-              borderRadius:  999,
-              background:    meta.color + "22",
-              color:         meta.color,
-              marginLeft:    4,
-            }}>
+            <span
+              className="text-[9px] font-bold uppercase tracking-[0.08em] px-1.75 py-0.5 rounded-full ml-1"
+              style={{ background: meta.color + "22", color: meta.color }}
+            >
               Active
             </span>
           )}
         </div>
-        <p style={{ fontSize: 12, color: "#64748b", margin: 0 }}>{meta.tagline}</p>
+        <p className="text-xs text-slate-500 m-0">{meta.tagline}</p>
       </div>
 
       {/* Price */}
       <div>
         {plan.price_npr === 0 ? (
-          <span style={{ fontSize: 32, fontWeight: 900, color: "#f1f5f9", letterSpacing: "-0.04em" }}>
+          <span className="text-[32px] font-black text-slate-100 tracking-[-0.04em]">
             Free
           </span>
         ) : (
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-            <span style={{ fontSize: 13, color: "#64748b", fontFamily: "monospace" }}>NPR</span>
-            <span style={{ fontSize: 32, fontWeight: 900, color: meta.color, letterSpacing: "-0.04em" }}>
+          <div className="flex items-baseline gap-1">
+            <span className="text-[13px] text-slate-500 font-mono">NPR</span>
+            <span
+              className="text-[32px] font-black tracking-[-0.04em]"
+              style={{ color: meta.color }}
+            >
               {plan.price_npr.toLocaleString()}
             </span>
-            <span style={{ fontSize: 12, color: "#475569" }}>/mo</span>
+            <span className="text-xs text-slate-600">/mo</span>
           </div>
         )}
       </div>
 
       {/* Limits */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
-        <LimitRow icon="⬡" label="Tokens"   value={fmt(plan.tokens_per_month)}                       color={meta.color} />
-        <LimitRow icon="↗" label="Requests" value={fmt(plan.requests_per_month, "/mo")}              color={meta.color} />
-        <LimitRow icon="◈" label="Images"   value={fmt(plan.image_generations_per_month, "/mo")}     color={meta.color} />
+      <div className="flex flex-col gap-2.5 flex-1">
+        <LimitRow icon="⬡" label="Tokens"   value={fmt(plan.tokens_per_month)}                    color={meta.color} />
+        <LimitRow icon="↗" label="Requests" value={fmt(plan.requests_per_month, "/mo")}           color={meta.color} />
+        <LimitRow icon="◈" label="Images"   value={fmt(plan.image_generations_per_month, "/mo")}  color={meta.color} />
       </div>
 
       {/* CTA */}
       <button
         disabled={isCurrent || loading}
         onClick={() => !isCurrent && onSelect(plan)}
+        className="w-full py-3 rounded-[10px] text-[13px] font-bold tracking-[0.04em] border-none transition-all duration-150"
         style={{
-          width:         "100%",
-          padding:       "12px 0",
-          borderRadius:  10,
-          fontSize:      13,
-          fontWeight:    700,
-          letterSpacing: "0.04em",
-          cursor:        isCurrent || loading ? "default" : "pointer",
-          border:        "none",
-          transition:    "all 0.15s",
-          background:    isCurrent
+          cursor:     isCurrent || loading ? "default" : "pointer",
+          background: isCurrent
             ? "#1e293b"
             : plan.action === "upgrade"
               ? `linear-gradient(135deg, ${meta.color}, ${meta.color}cc)`
               : "#1e293b",
-          color:     isCurrent ? "#475569" : plan.action === "upgrade" ? "#fff" : meta.color,
-          boxShadow: (!isCurrent && plan.action === "upgrade") ? `0 4px 16px ${meta.glow}` : "none",
+          color:      isCurrent ? "#475569" : plan.action === "upgrade" ? "#fff" : meta.color,
+          boxShadow:  (!isCurrent && plan.action === "upgrade") ? `0 4px 16px ${meta.glow}` : "none",
         }}
       >
         {loading ? "Processing…" : btnLabel}
@@ -165,17 +134,15 @@ function LimitRow({ icon, label, value, color }: {
 }) {
   const isUnlimited = value === "Unlimited";
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#64748b" }}>
+    <div className="flex justify-between items-center">
+      <div className="flex items-center gap-2 text-xs text-slate-500">
         <span style={{ color }}>{icon}</span>
         {label}
       </div>
-      <span style={{
-        fontSize:   12,
-        fontFamily: "monospace",
-        fontWeight: 600,
-        color:      isUnlimited ? color : "#94a3b8",
-      }}>
+      <span
+        className="text-xs font-mono font-semibold"
+        style={{ color: isUnlimited ? color : "#94a3b8" }}
+      >
         {value}
       </span>
     </div>

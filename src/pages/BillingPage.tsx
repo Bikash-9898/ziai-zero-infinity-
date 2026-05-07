@@ -53,9 +53,6 @@ export default function BillingPage() {
       );
       refetchStatus();
     } catch (err) {
-      // FIX: Previously swallowed the real error — now shows actual message.
-      // OLD CODE: setCancelMsg("Failed to cancel. Please try again.");
-      // ↑ That catch block had no (err) parameter, losing the error detail.
       setCancelMsg(
         err instanceof Error ? err.message : "Failed to cancel. Please try again."
       );
@@ -66,64 +63,27 @@ export default function BillingPage() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div style={{
-      minHeight:  "100vh",
-      background: "#060c18",
-      color:      "#f1f5f9",
-      fontFamily: "'Syne', sans-serif",
-      padding:    "48px 24px 80px",
-    }}>
+    <div className="min-h-screen bg-[#060c18] text-slate-100 font-['Syne',sans-serif] px-6 py-12 pb-20">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
         * { box-sizing: border-box; }
       `}</style>
 
-      <div style={{
-        maxWidth:      900,
-        margin:        "0 auto",
-        display:       "flex",
-        flexDirection: "column",
-        gap:           32,
-      }}>
+      <div className="max-w-225 mx-auto flex flex-col gap-8">
 
         {/* ── Header ───────────────────────────────────────────────────── */}
-        <div style={{
-          display:        "flex",
-          justifyContent: "space-between",
-          alignItems:     "flex-start",
-          flexWrap:       "wrap",
-          gap:            16,
-        }}>
+        <div className="flex justify-between items-start flex-wrap gap-4">
           <div>
-            <h1 style={{
-              fontSize:      30,
-              fontWeight:    900,
-              letterSpacing: "-0.04em",
-              margin:        "0 0 6px",
-            }}>
+            <h1 className="text-[30px] font-black tracking-[-0.04em] mb-1.5 mt-0">
               Billing &amp; Plans
             </h1>
-            <p style={{ fontSize: 14, color: "#475569", margin: 0 }}>
+            <p className="text-sm text-slate-500 m-0">
               Manage your subscription, payment history, and usage
             </p>
           </div>
           <button
             onClick={() => setShowUpgrade(true)}
-            style={{
-              padding:       "11px 22px",
-              background:    "linear-gradient(135deg, #6366f1, #4f46e5)",
-              border:        "none",
-              borderRadius:  12,
-              color:         "#fff",
-              fontSize:      13,
-              fontWeight:    700,
-              cursor:        "pointer",
-              letterSpacing: "0.04em",
-              boxShadow:     "0 4px 16px #6366f133",
-              display:       "flex",
-              alignItems:    "center",
-              gap:           8,
-            }}
+            className="px-5.5 py-2.75 bg-linear-to-br from-indigo-500 to-indigo-600 border-none rounded-xl text-white text-[13px] font-bold cursor-pointer tracking-[0.04em] shadow-[0_4px_16px_#6366f133] flex items-center gap-2"
           >
             <Zap size={15} />
             Upgrade Plan
@@ -131,54 +91,34 @@ export default function BillingPage() {
         </div>
 
         {/* ── Current plan card ─────────────────────────────────────────── */}
-        <div style={{
-          background:     `linear-gradient(135deg, ${planColor}11, #0f172a)`,
-          border:         `1px solid ${planColor}44`,
-          borderRadius:   16,
-          padding:        "24px 28px",
-          display:        "flex",
-          justifyContent: "space-between",
-          alignItems:     "center",
-          flexWrap:       "wrap",
-          gap:            20,
-          boxShadow:      `0 0 40px ${planColor}11`,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+        <div
+          className="border rounded-2xl px-7 py-6 flex justify-between items-center flex-wrap gap-5"
+          style={{
+            background:  `linear-gradient(135deg, ${planColor}11, #0f172a)`,
+            borderColor: `${planColor}44`,
+            boxShadow:   `0 0 40px ${planColor}11`,
+          }}
+        >
+          <div className="flex items-center gap-4">
             {/* Plan icon */}
-            <div style={{
-              width:          56,
-              height:         56,
-              borderRadius:   14,
-              background:     `${planColor}22`,
-              border:         `1px solid ${planColor}44`,
-              display:        "flex",
-              alignItems:     "center",
-              justifyContent: "center",
-              fontSize:       26,
-              color:          planColor,
-            }}>
+            <div
+              className="w-14 h-14 rounded-[14px] flex items-center justify-center text-[26px]"
+              style={{
+                background:  `${planColor}22`,
+                border:      `1px solid ${planColor}44`,
+                color:       planColor,
+              }}
+            >
               {planIcon}
             </div>
             <div>
-              <p style={{
-                fontSize:      11,
-                color:         "#64748b",
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                margin:        "0 0 4px",
-              }}>
+              <p className="text-[11px] text-slate-500 uppercase tracking-widest mb-1 mt-0">
                 Active Plan
               </p>
-              <p style={{
-                fontSize:      22,
-                fontWeight:    900,
-                color:         "#f1f5f9",
-                margin:        "0 0 2px",
-                letterSpacing: "-0.02em",
-              }}>
+              <p className="text-[22px] font-black text-slate-100 mb-0.5 mt-0 tracking-[-0.02em]">
                 {cap(status?.current_plan ?? "free")}
               </p>
-              <p style={{ fontSize: 12, color: "#475569", margin: 0, fontFamily: "monospace" }}>
+              <p className="text-xs text-slate-600 m-0 font-mono">
                 {status?.subscription.status === "active" && status.subscription.period_end
                   ? `Renews ${new Date(status.subscription.period_end).toLocaleDateString("en-NP")}`
                   : status?.subscription.status === "canceled"
@@ -190,26 +130,12 @@ export default function BillingPage() {
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: "flex", gap: 10 }}>
+          <div className="flex gap-2.5">
             {status?.subscription.status === "active" && status.current_plan !== "free" && (
               <button
                 onClick={handleCancel}
                 disabled={canceling}
-                style={{
-                  padding:      "9px 16px",
-                  background:   "transparent",
-                  border:       "1px solid #ef444444",
-                  borderRadius: 10,
-                  color:        "#ef4444",
-                  fontSize:     12,
-                  fontWeight:   600,
-                  cursor:       canceling ? "not-allowed" : "pointer",
-                  display:      "flex",
-                  alignItems:   "center",
-                  gap:          6,
-                  opacity:      canceling ? 0.6 : 1,
-                  transition:   "opacity 0.2s",
-                }}
+                className="px-4 py-2.25 bg-transparent border border-red-500/25 rounded-[10px] text-red-500 text-xs font-semibold flex items-center gap-1.5 transition-opacity duration-200 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
               >
                 <RotateCcw size={13} />
                 {canceling ? "Canceling…" : "Cancel Plan"}
@@ -217,19 +143,7 @@ export default function BillingPage() {
             )}
             <button
               onClick={() => setShowUpgrade(true)}
-              style={{
-                padding:      "9px 16px",
-                background:   "#1e293b",
-                border:       "1px solid #334155",
-                borderRadius: 10,
-                color:        "#94a3b8",
-                fontSize:     12,
-                fontWeight:   600,
-                cursor:       "pointer",
-                display:      "flex",
-                alignItems:   "center",
-                gap:          6,
-              }}
+              className="px-4 py-2.25 bg-slate-800 border border-slate-700 rounded-[10px] text-slate-400 text-xs font-semibold cursor-pointer flex items-center gap-1.5"
             >
               Change Plan <ChevronRight size={13} />
             </button>
@@ -238,14 +152,7 @@ export default function BillingPage() {
 
         {/* Cancel message */}
         {cancelMsg && (
-          <p style={{
-            fontSize:     13,
-            color:        "#f59e0b",
-            background:   "#f59e0b11",
-            border:       "1px solid #f59e0b33",
-            borderRadius: 8,
-            padding:      "10px 14px",
-          }}>
+          <p className="text-[13px] text-amber-400 bg-amber-400/5 border border-amber-400/20 rounded-lg px-3.5 py-2.5">
             {cancelMsg}
           </p>
         )}
@@ -255,7 +162,7 @@ export default function BillingPage() {
           {usageLoading ? (
             <Skeleton />
           ) : usage ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            <div className="flex flex-col gap-4.5">
               <UsageBar
                 label="Tokens"
                 used={usage.tokens_used}
@@ -277,9 +184,6 @@ export default function BillingPage() {
                 used={usage.images_used}
                 limit={usage.images_limit}
                 isUnlimited={usage.images_limit === -1}
-                // FIX: Previously computed inline as a ternary that could produce
-                // wrong values. Now UsageBar handles the null case internally.
-                // OLD CODE: percent={usage.images_limit === -1 ? null : (usage.images_used / usage.images_limit) * 100}
                 percent={
                   usage.images_limit === -1
                     ? null
@@ -291,7 +195,7 @@ export default function BillingPage() {
               />
             </div>
           ) : (
-            <p style={{ color: "#334155", fontSize: 13 }}>No usage data</p>
+            <p className="text-slate-700 text-[13px]">No usage data</p>
           )}
         </Section>
 
@@ -300,26 +204,17 @@ export default function BillingPage() {
           {payLoading ? (
             <Skeleton />
           ) : !payments || payments.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#334155", padding: "16px 0" }}>
+            <p className="text-[13px] text-slate-700 py-4">
               No payment records yet.
             </p>
           ) : (
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+            <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr>
                   {["Date", "Plan", "Amount", "Provider", "Status"].map(h => (
                     <th
                       key={h}
-                      style={{
-                        textAlign:     "left",
-                        fontSize:      10,
-                        fontWeight:    700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.1em",
-                        color:         "#334155",
-                        paddingBottom: 10,
-                        borderBottom:  "1px solid #1e293b",
-                      }}
+                      className="text-left text-[10px] font-bold uppercase tracking-widest text-slate-700 pb-2.5 border-b border-slate-800"
                     >
                       {h}
                     </th>
@@ -329,40 +224,19 @@ export default function BillingPage() {
               <tbody>
                 {payments.map(p => (
                   <tr key={p.id}>
-                    <td style={{
-                      padding:     "11px 0",
-                      borderBottom: "1px solid #0f172a",
-                      color:        "#64748b",
-                      fontFamily:   "monospace",
-                      fontSize:     11,
-                    }}>
+                    <td className="py-2.75 border-b border-[#0f172a] text-slate-500 font-mono text-[11px]">
                       {new Date(p.created_at).toLocaleDateString("en-NP")}
                     </td>
-                    <td style={{
-                      padding:      "11px 0",
-                      borderBottom: "1px solid #0f172a",
-                      color:        "#f1f5f9",
-                      fontWeight:   600,
-                    }}>
+                    <td className="py-2.75 border-b border-[#0f172a] text-slate-100 font-semibold">
                       {cap(p.plan)}
                     </td>
-                    <td style={{
-                      padding:      "11px 0",
-                      borderBottom: "1px solid #0f172a",
-                      color:        "#94a3b8",
-                      fontFamily:   "monospace",
-                    }}>
+                    <td className="py-2.75 border-b border-[#0f172a] text-slate-400 font-mono">
                       NPR {Number(p.amount).toLocaleString()}
                     </td>
-                    <td style={{
-                      padding:       "11px 0",
-                      borderBottom:  "1px solid #0f172a",
-                      color:         "#64748b",
-                      textTransform: "capitalize",
-                    }}>
+                    <td className="py-2.75 border-b border-[#0f172a] text-slate-500 capitalize">
                       {p.provider}
                     </td>
-                    <td style={{ padding: "11px 0", borderBottom: "1px solid #0f172a" }}>
+                    <td className="py-2.75 border-b border-[#0f172a]">
                       <StatusBadge status={p.status} />
                     </td>
                   </tr>
@@ -375,7 +249,7 @@ export default function BillingPage() {
         {/* ── Last payment detail ───────────────────────────────────────── */}
         {status?.last_payment.amount && (
           <Section title="Last Successful Payment" icon={<Clock size={14} />}>
-            <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <div className="flex gap-6 flex-wrap">
               <InfoItem
                 label="Amount"
                 value={`NPR ${Number(status.last_payment.amount).toLocaleString()}`}
@@ -426,22 +300,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{
-      background:   "#0f172a",
-      border:       "1px solid #1e293b",
-      borderRadius: 14,
-      padding:      "22px 26px",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20 }}>
-        <span style={{ color: "#475569" }}>{icon}</span>
-        <p style={{
-          fontSize:      11,
-          fontWeight:    700,
-          textTransform: "uppercase",
-          letterSpacing: "0.12em",
-          color:         "#475569",
-          margin:        0,
-        }}>
+    <div className="bg-slate-900 border border-slate-800 rounded-2xl px-6.5 py-5.5">
+      <div className="flex items-center gap-2 mb-5">
+        <span className="text-slate-500">{icon}</span>
+        <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 m-0">
           {title}
         </p>
       </div>
@@ -452,16 +314,11 @@ function Section({
 
 function InfoItem({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-      <span style={{
-        fontSize:      10,
-        textTransform: "uppercase",
-        letterSpacing: "0.08em",
-        color:         "#475569",
-      }}>
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] uppercase tracking-[0.08em] text-slate-500">
         {label}
       </span>
-      <span style={{ fontSize: 14, color: "#94a3b8", fontFamily: "monospace" }}>
+      <span className="text-sm text-slate-400 font-mono">
         {value}
       </span>
     </div>
@@ -470,23 +327,14 @@ function InfoItem({ label, value }: { label: string; value: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, [string, string]> = {
-    success:  ["#22c55e22", "#22c55e"],
-    pending:  ["#f59e0b22", "#f59e0b"],
-    failed:   ["#ef444422", "#ef4444"],
-    refunded: ["#6366f122", "#6366f1"],
+    success:  ["bg-green-500/10 text-green-500", ""],
+    pending:  ["bg-amber-500/10 text-amber-500", ""],
+    failed:   ["bg-red-500/10 text-red-500",     ""],
+    refunded: ["bg-indigo-500/10 text-indigo-500", ""],
   };
-  const [bg, fg] = colors[status] ?? ["#33415522", "#64748b"];
+  const cls = colors[status]?.[0] ?? "bg-slate-700/10 text-slate-500";
   return (
-    <span style={{
-      fontSize:      10,
-      fontWeight:    700,
-      textTransform: "uppercase",
-      letterSpacing: "0.06em",
-      padding:       "3px 8px",
-      borderRadius:  999,
-      background:    bg,
-      color:         fg,
-    }}>
+    <span className={`text-[10px] font-bold uppercase tracking-[0.06em] px-2 py-0.75 rounded-full ${cls}`}>
       {status}
     </span>
   );
@@ -495,13 +343,7 @@ function StatusBadge({ status }: { status: string }) {
 function Skeleton() {
   return (
     <>
-      <div style={{
-        height:          80,
-        background:      "linear-gradient(90deg,#0f172a,#1e293b,#0f172a)",
-        backgroundSize:  "200% 100%",
-        borderRadius:    10,
-        animation:       "billing-shimmer 1.5s infinite",
-      }} />
+      <div className="h-20 rounded-[10px] animate-[billing-shimmer_1.5s_infinite] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-[length:200%_100%]" />
       <style>{`
         @keyframes billing-shimmer {
           0%   { background-position: 200% center; }

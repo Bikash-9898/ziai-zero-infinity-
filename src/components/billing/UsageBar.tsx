@@ -149,6 +149,7 @@
 
 // src/components/billing/UsageBar.tsx
 // This component was referenced in BillingPage but not provided — created here.
+// src/components/billing/UsageBar.tsx
 
 interface UsageBarProps {
   label: string;
@@ -167,15 +168,11 @@ export default function UsageBar({
   percent,
   icon,
 }: UsageBarProps) {
-  const pct         = isUnlimited || percent === null ? null : Math.min(percent, 100);
-  const isWarning   = pct !== null && pct >= 80;
-  const isCritical  = pct !== null && pct >= 95;
+  const pct        = isUnlimited || percent === null ? null : Math.min(percent, 100);
+  const isWarning  = pct !== null && pct >= 80;
+  const isCritical = pct !== null && pct >= 95;
 
-  const barColor = isCritical
-    ? "#ef4444"
-    : isWarning
-      ? "#f59e0b"
-      : "#6366f1";
+  const barColor = isCritical ? "#ef4444" : isWarning ? "#f59e0b" : "#6366f1";
 
   function fmt(n: number): string {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -184,24 +181,22 @@ export default function UsageBar({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <div className="flex flex-col gap-2">
+
       {/* Label row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ color: barColor, fontSize: 14 }}>{icon}</span>
-          <span style={{ fontSize: 13, color: "#94a3b8", fontWeight: 600 }}>{label}</span>
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-sm" style={{ color: barColor }}>{icon}</span>
+          <span className="text-[13px] text-slate-400 font-semibold">{label}</span>
         </div>
-        <span style={{ fontSize: 12, fontFamily: "monospace", color: "#64748b" }}>
-          {isUnlimited
-            ? <span style={{ color: barColor, fontWeight: 700 }}>Unlimited</span>
-            : `${fmt(used)} / ${fmt(limit)}`
-          }
+        <span className="text-xs font-mono text-slate-500">
+          {isUnlimited ? (
+            <span className="font-bold" style={{ color: barColor }}>Unlimited</span>
+          ) : (
+            `${fmt(used)} / ${fmt(limit)}`
+          )}
           {!isUnlimited && pct !== null && (
-            <span style={{
-              marginLeft: 6,
-              color:      barColor,
-              fontWeight: 700,
-            }}>
+            <span className="ml-1.5 font-bold" style={{ color: barColor }}>
               {pct.toFixed(0)}%
             </span>
           )}
@@ -210,43 +205,37 @@ export default function UsageBar({
 
       {/* Bar track */}
       {!isUnlimited && (
-        <div style={{
-          height:       6,
-          background:   "#1e293b",
-          borderRadius: 999,
-          overflow:     "hidden",
-        }}>
-          <div style={{
-            height:       "100%",
-            width:        `${pct ?? 0}%`,
-            background:   isCritical
-              ? "linear-gradient(90deg, #ef4444, #dc2626)"
-              : isWarning
-                ? "linear-gradient(90deg, #f59e0b, #d97706)"
-                : "linear-gradient(90deg, #6366f1, #8b5cf6)",
-            borderRadius: 999,
-            transition:   "width 0.6s ease",
-          }} />
+        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full transition-[width] duration-600 ease-in-out"
+            style={{
+              width: `${pct ?? 0}%`,
+              background: isCritical
+                ? "linear-gradient(90deg, #ef4444, #dc2626)"
+                : isWarning
+                  ? "linear-gradient(90deg, #f59e0b, #d97706)"
+                  : "linear-gradient(90deg, #6366f1, #8b5cf6)",
+            }}
+          />
         </div>
       )}
 
       {/* Unlimited shimmer bar */}
       {isUnlimited && (
-        <div style={{
-          height:     6,
-          background: `linear-gradient(90deg, ${barColor}44, ${barColor}88, ${barColor}44)`,
-          borderRadius: 999,
-          backgroundSize: "200% 100%",
-          animation:  "usage-shimmer 2s linear infinite",
-        }} />
+        <>
+          <div
+            className="h-1.5 rounded-full bg-size-[200%_100%] animate-[usage-shimmer_2s_linear_infinite]"
+            style={{ background: `linear-gradient(90deg, ${barColor}44, ${barColor}88, ${barColor}44)` }}
+          />
+          <style>{`
+            @keyframes usage-shimmer {
+              0%   { background-position: 200% center; }
+              100% { background-position: -200% center; }
+            }
+          `}</style>
+        </>
       )}
 
-      <style>{`
-        @keyframes usage-shimmer {
-          0%   { background-position: 200% center; }
-          100% { background-position: -200% center; }
-        }
-      `}</style>
     </div>
   );
 }

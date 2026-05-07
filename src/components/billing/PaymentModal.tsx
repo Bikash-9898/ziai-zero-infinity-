@@ -34,57 +34,83 @@ export default function PaymentModal({
 
   return (
     <div
-      className="modal-backdrop"
+      className="fixed inset-0 bg-black/75 backdrop-blur-md flex items-center justify-center z-1000 p-4 animate-[fadeIn_0.15s_ease]"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="modal-box">
+      <div className="bg-[#0f172a] border border-[#1e293b] rounded-[20px] w-full max-w-105 p-7 flex flex-col gap-5 shadow-[0_32px_80px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.03)] animate-[slideUp_0.2s_cubic-bezier(0.4,0,0.2,1)]">
 
         {/* Header */}
-        <div className="modal-header">
+        <div className="flex justify-between items-start">
           <div>
-            <h2 className="modal-title">Complete Payment</h2>
-            <p className="modal-sub">
-              Upgrading to <strong>{planLabel}</strong> plan
+            <h2 className="text-[20px] font-bold text-slate-100 m-0 mb-1 tracking-tight">
+              Complete Payment
+            </h2>
+            <p className="text-[13px] text-slate-500 m-0">
+              Upgrading to <strong className="text-slate-400">{planLabel}</strong> plan
             </p>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button
+            className="bg-[#1e293b] border-none text-slate-500 w-8 h-8 rounded-lg cursor-pointer text-sm flex items-center justify-center transition-[background,color] duration-150 shrink-0 hover:bg-[#273344] hover:text-slate-100"
+            onClick={onClose}
+          >
+            ✕
+          </button>
         </div>
 
         {/* Amount */}
-        <div className="amount-row">
-          <span className="amount-label">Amount due</span>
-          <span className="amount-value">NPR {priceNPR.toLocaleString()}</span>
+        <div className="flex justify-between items-center bg-[#1e293b] rounded-xl px-4.5 py-3.5">
+          <span className="text-[13px] text-slate-500">Amount due</span>
+          <span className="text-[22px] font-extrabold text-slate-100 tabular-nums tracking-[-0.03em]">
+            NPR {priceNPR.toLocaleString()}
+          </span>
         </div>
 
-        <div className="divider" />
+        <div className="h-px bg-[#1e293b]" />
 
         {/* Provider selection */}
-        <p className="section-label">Choose payment method</p>
-        <div className="provider-grid">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-600 m-0">
+          Choose payment method
+        </p>
+        <div className="grid grid-cols-2 gap-3">
           <button
-            className={`provider-btn ${selectedProvider === "esewa" ? "selected" : ""}`}
+            className={`bg-[#1e293b] border rounded-xl px-3 py-4 flex flex-col items-center gap-1.5 cursor-pointer transition-all duration-150 hover:border-slate-500 hover:bg-[#273344] ${
+              selectedProvider === "esewa"
+                ? "border-indigo-500 bg-indigo-500/[0.07] shadow-[0_0_16px_rgba(99,102,241,0.13)]"
+                : "border-[#334155]"
+            }`}
             onClick={() => setSelectedProvider("esewa")}
           >
-            <span className="provider-logo esewa-logo">e</span>
-            <span className="provider-name">eSewa</span>
-            <span className="provider-tag">NPR · Wallet</span>
+            <span className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[18px] font-black text-white bg-[#60bb46]">
+              e
+            </span>
+            <span className="text-sm font-semibold text-slate-200">eSewa</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-[0.06em]">NPR · Wallet</span>
           </button>
+
           <button
-            className={`provider-btn ${selectedProvider === "khalti" ? "selected" : ""}`}
+            className={`bg-[#1e293b] border rounded-xl px-3 py-4 flex flex-col items-center gap-1.5 cursor-pointer transition-all duration-150 hover:border-slate-500 hover:bg-[#273344] ${
+              selectedProvider === "khalti"
+                ? "border-indigo-500 bg-indigo-500/[0.07] shadow-[0_0_16px_rgba(99,102,241,0.13)]"
+                : "border-[#334155]"
+            }`}
             onClick={() => setSelectedProvider("khalti")}
           >
-            <span className="provider-logo khalti-logo">K</span>
-            <span className="provider-name">Khalti</span>
-            <span className="provider-tag">NPR · Digital</span>
+            <span className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[18px] font-black text-white bg-[#5c2d91]">
+              K
+            </span>
+            <span className="text-sm font-semibold text-slate-200">Khalti</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-[0.06em]">NPR · Digital</span>
           </button>
         </div>
 
-        <div className="divider" />
+        <div className="h-px bg-[#1e293b]" />
 
         {/* Payment button */}
-        <div className="pay-action">
+        <div className="min-h-11 flex flex-col items-stretch">
           {!selectedProvider && (
-            <p className="select-hint">Select a payment method above to continue</p>
+            <p className="text-[13px] text-slate-600 text-center my-1">
+              Select a payment method above to continue
+            </p>
           )}
           {selectedProvider === "esewa" && (
             <EsewaButton plan={plan} userId={userId} />
@@ -96,161 +122,11 @@ export default function PaymentModal({
         </div>
 
         {/* Footer */}
-        <p className="modal-footer-note">
+        <p className="text-[11px] text-slate-700 text-center m-0 leading-relaxed">
           🔒 Payments are processed securely. Your subscription activates
           immediately after verification.
         </p>
       </div>
-
-      <style>{`
-        .modal-backdrop {
-          position: fixed;
-          inset: 0;
-          background: rgba(0,0,0,0.75);
-          backdrop-filter: blur(6px);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-          padding: 16px;
-          animation: fadeIn 0.15s ease;
-        }
-        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        .modal-box {
-          background: #0f172a;
-          border: 1px solid #1e293b;
-          border-radius: 20px;
-          width: 100%;
-          max-width: 420px;
-          padding: 28px;
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-          animation: slideUp 0.2s cubic-bezier(0.4,0,0.2,1);
-          box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px #ffffff08;
-        }
-        @keyframes slideUp {
-          from { transform: translateY(16px); opacity: 0 }
-          to   { transform: none; opacity: 1 }
-        }
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-        }
-        .modal-title {
-          font-size: 20px;
-          font-weight: 700;
-          color: #f1f5f9;
-          margin: 0 0 4px;
-          letter-spacing: -0.02em;
-        }
-        .modal-sub { font-size: 13px; color: #64748b; margin: 0; }
-        .modal-sub strong { color: #94a3b8; }
-        .modal-close {
-          background: #1e293b;
-          border: none;
-          color: #64748b;
-          width: 32px;
-          height: 32px;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.15s, color 0.15s;
-          flex-shrink: 0;
-        }
-        .modal-close:hover { background: #273344; color: #f1f5f9; }
-        .amount-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          background: #1e293b;
-          border-radius: 12px;
-          padding: 14px 18px;
-        }
-        .amount-label { font-size: 13px; color: #64748b; }
-        .amount-value {
-          font-size: 22px;
-          font-weight: 800;
-          color: #f1f5f9;
-          font-variant-numeric: tabular-nums;
-          letter-spacing: -0.03em;
-        }
-        .divider { height: 1px; background: #1e293b; }
-        .section-label {
-          font-size: 11px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: #475569;
-          margin: 0;
-        }
-        .provider-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-        .provider-btn {
-          background: #1e293b;
-          border: 1px solid #334155;
-          border-radius: 12px;
-          padding: 16px 12px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 6px;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .provider-btn:hover { border-color: #475569; background: #273344; }
-        .provider-btn.selected {
-          border-color: #6366f1;
-          background: #6366f111;
-          box-shadow: 0 0 16px #6366f122;
-        }
-        .provider-logo {
-          width: 40px;
-          height: 40px;
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          font-weight: 900;
-          color: #fff;
-        }
-        .esewa-logo  { background: #60bb46; }
-        .khalti-logo { background: #5c2d91; }
-        .provider-name { font-size: 14px; font-weight: 600; color: #e2e8f0; }
-        .provider-tag {
-          font-size: 10px;
-          color: #64748b;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
-        }
-        .pay-action {
-          min-height: 44px;
-          display: flex;
-          flex-direction: column;
-          align-items: stretch;
-        }
-        .select-hint {
-          font-size: 13px;
-          color: #475569;
-          text-align: center;
-          margin: 4px 0;
-        }
-        .modal-footer-note {
-          font-size: 11px;
-          color: #334155;
-          text-align: center;
-          margin: 0;
-          line-height: 1.5;
-        }
-      `}</style>
     </div>
   );
 }
