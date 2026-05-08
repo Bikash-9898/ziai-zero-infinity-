@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/context/useAuth';
 import { useChatStore } from '@/store/useChatStore';
-import { useImageStore } from '@/store/useImageStore';
+// import { useImageStore } from '@/store/useImageStore';
 import {
   MessageSquare,
   Image as ImageIcon,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import UpgradeModal from './billing/UpgradeModal';
 import { Link } from 'react-router-dom';
+import { ImageSidebarHistory } from './image/ImageSidebarHistory';
 
 interface SidebarProps {
   activeTab: 'chat' | 'image' | 'settings';
@@ -64,7 +65,7 @@ export default function Sidebar({
     startNewChat,
   } = useChatStore();
 
-  const { history } = useImageStore();
+  // const { history } = useImageStore();
 
   useEffect(() => {
     if (user?.email) fetchConversations(user.email);
@@ -251,7 +252,8 @@ export default function Sidebar({
               <p className="px-1 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                 Recent Images
               </p>
-              {history.length === 0 ? (
+              <ImageSidebarHistory />
+              {/* {history.length === 0 ? (
                 <div className="text-center py-8">
                   <ImageIcon size={24} className="text-slate-700 mx-auto mb-2" />
                   <p className="text-[11px] text-slate-600 font-mono">No generations yet</p>
@@ -268,7 +270,7 @@ export default function Sidebar({
                     </div>
                   ))}
                 </div>
-              )}
+              )} */}
             </>
           )}
         </div>

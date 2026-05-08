@@ -1,12 +1,12 @@
 import type { User } from '@/types/types';
-
-const API_URL = 'http://localhost:8000/api';
+import { BASE_URL } from '@/config';
+// const API_URL = 'http://localhost:8000/api';
 // const API_URL = `${import.meta.env.VITE_API_URL}/api`; 
 
 export const authApi = {
   // Verifies the Google Token with your backend
   verifyGoogleToken: async (token: string): Promise<{ verified: boolean; user: User }> => {
-    const response = await fetch(`${API_URL}/auth/google`, {
+    const response = await fetch(`${BASE_URL}/auth/google`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ token }),

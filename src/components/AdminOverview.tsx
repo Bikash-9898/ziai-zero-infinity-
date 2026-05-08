@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Activity, Database, Users } from 'lucide-react';
 import StatCard from "./StatCard"
+import { ADMIN_KEY, BASE_URL } from '@/config';
 
 interface Stats {
   active_requests: number;
@@ -14,7 +15,9 @@ export default function AdminOverview() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/admin/stats')
+    fetch(`${BASE_URL}/admin/stats`, {
+      headers: { 'X-Admin-Key': ADMIN_KEY },
+    })
       .then(res => res.json())
       .then(data => {
         setStats(data);

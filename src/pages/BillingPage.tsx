@@ -343,7 +343,7 @@ function StatusBadge({ status }: { status: string }) {
 function Skeleton() {
   return (
     <>
-      <div className="h-20 rounded-[10px] animate-[billing-shimmer_1.5s_infinite] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-[length:200%_100%]" />
+      <div className="h-20 rounded-[10px] animate-[billing-shimmer_1.5s_infinite] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-size-[200%_100%]" />
       <style>{`
         @keyframes billing-shimmer {
           0%   { background-position: 200% center; }

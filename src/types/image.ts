@@ -17,14 +17,13 @@ export interface GenerationOptions {
 
 export interface GeneratedImage {
   id: string;
-  image_url: string;       // ← snake_case, matches DB + backend
+  image_url: string;
   prompt: string;
   model: string;
-  created_at: string;      // ← rename createdAt to created_at
+  created_at: string;
   generation_time_ms?: number;
 }
 
-// ← add this
 export interface ImageStore {
   status: ImageStatus;
   currentImage: string | null;

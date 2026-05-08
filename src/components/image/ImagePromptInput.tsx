@@ -34,38 +34,6 @@ export default function ImagePromptInput() {
     return tags ? `${prompt}, ${tags}` : prompt;
   }
 
-  // async function handleGenerate() {
-  //   // ── debug logs — remove after it works ──
-  //   console.log('user object:', user);
-  //   console.log('prompt:', prompt);
-  //   console.log('model:', model);
-  //   console.log('status:', status);
-  //   // ────────────────────────────────────────
-
-  //   if (!prompt.trim()) {
-  //     console.log('BLOCKED: empty prompt');
-  //     return;
-  //   }
-  //   if (isGenerating) {
-  //     console.log('BLOCKED: already generating');
-  //     return;
-  //   }
-
-  //   console.log('calling generate...');
-  //   try {
-  //     await generate({
-  //       prompt: buildPrompt(),
-  //       negativePrompt: negPrompt || undefined,
-  //       model,
-  //       width: ratio.w,
-  //       height: ratio.h,
-  //     });
-  //     console.log('generate completed');
-  //   } catch (err) {
-  //     console.error('generate threw error:', err);
-  //   }
-  // }
-
   async function handleGenerate() {
     console.log('user object:', user);
     console.log('prompt:', prompt);
@@ -88,8 +56,8 @@ export default function ImagePromptInput() {
   }
 
   return (
-    <div className="shrink-0 border-b border-slate-800/50 p-4">
-      <div className="max-w-4xl mx-auto bg-[#080c14] border border-slate-800/60 rounded-2xl p-4">
+    <div className="shrink-0 border-b border-white/5 p-4">
+      <div className="max-w-4xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-4">
 
         {/* Main prompt */}
         <textarea
@@ -109,8 +77,8 @@ export default function ImagePromptInput() {
               onClick={() => toggleTag(tag)}
               className={`px-2 py-1 rounded text-[10px] font-mono border transition-all ${
                 selectedTags.includes(tag)
-                  ? 'bg-blue-950 border-blue-600 text-blue-300'
-                  : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600'
+                  ? 'bg-purple-600/20 border-purple-500/50 text-purple-300'
+                  : 'bg-white/5 border-white/10 text-slate-500 hover:border-white/20'
               }`}
             >
               {tag}
@@ -136,8 +104,8 @@ export default function ImagePromptInput() {
                   onClick={() => setRatio(r)}
                   className={`flex-1 py-2 rounded-lg text-[11px] font-mono border transition-all ${
                     ratio.label === r.label
-                      ? 'bg-blue-950 border-blue-600 text-blue-300'
-                      : 'bg-slate-900 border-slate-800 text-slate-500 hover:border-slate-600'
+                      ? 'bg-purple-600/20 border-purple-500/50 text-purple-300'
+                      : 'bg-white/5 border-white/10 text-slate-500 hover:border-white/20'
                   }`}
                 >
                   {r.label}
@@ -153,8 +121,8 @@ export default function ImagePromptInput() {
               onClick={() => setShowNeg(v => !v)}
               className={`w-full py-2 rounded-lg text-[11px] font-mono border transition-all ${
                 showNeg
-                  ? 'bg-slate-800 border-slate-600 text-slate-300'
-                  : 'bg-slate-900 border-slate-800 text-slate-600 hover:border-slate-700'
+                  ? 'bg-white/5 border-white/20 text-slate-300'
+                  : 'bg-white/5 border-white/10 text-slate-600 hover:border-white/20'
               }`}
             >
               {showNeg ? 'Hide' : 'Add negative…'}
@@ -169,7 +137,7 @@ export default function ImagePromptInput() {
             value={negPrompt}
             onChange={e => setNegPrompt(e.target.value)}
             placeholder="e.g. blurry, ugly, watermark, text, low quality…"
-            className="w-full mt-3 bg-slate-900/50 border border-slate-800 rounded-xl text-slate-400 text-[12px] font-mono px-4 py-3 resize-none outline-none placeholder-slate-700"
+            className="w-full mt-3 bg-white/5 border border-white/10 rounded-xl text-slate-400 text-[12px] font-mono px-4 py-3 resize-none outline-none placeholder-slate-700 focus:border-purple-500/30"
           />
         )}
 
@@ -179,7 +147,7 @@ export default function ImagePromptInput() {
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all"
+            className="flex items-center gap-2 bg-linear-to-r from-purple-600 to-blue-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all"
           >
             <Zap size={13} />
             {isGenerating ? 'GENERATING…' : 'GENERATE'}

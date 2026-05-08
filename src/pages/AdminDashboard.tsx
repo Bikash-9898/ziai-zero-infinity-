@@ -8,9 +8,10 @@ import AdminOverview from '@/components/AdminOverview';
 import { useAuth } from '@/context/useAuth';
 import LoginForm from '@/components/LoginForm/LoginForm';
 import AdminBillingView from '@/components/AdminBillingView';
+import { BASE_URL, ADMIN_KEY } from '@/config';
 
-const API ='http://localhost:8000';
-const ADMIN_KEY= "supersecretadminkey"
+// const API ='http://localhost:8000';
+// const ADMIN_KEY= "supersecretadminkey"
 // console.log('API URL:', API);
 
 
@@ -27,7 +28,7 @@ const AdminDashboard = () => {
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
 
   useEffect(() => {
-    fetch(`${API}/users`, {
+    fetch(`${BASE_URL}/users`, {
       headers: { 'X-Admin-Key': ADMIN_KEY },
     })
       .then((res) => {

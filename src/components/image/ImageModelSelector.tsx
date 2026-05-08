@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
+import { BASE_URL } from '@/config';
 
-const API_BASE = "http://localhost:8000/api"; // ← change this to your backend URL
+// const API_BASE = "http://localhost:8000/api"; // ← change this to your backend URL
 
 interface ImageModel {
   id: string;
@@ -27,7 +28,7 @@ export default function ImageModelSelector({ value, onChange }: Props) {
   //     .catch(() => setLoading(false));
   // }, []);
   useEffect(() => {
-    fetch(`${API_BASE}/image/models`)
+    fetch(`${BASE_URL}/image/models`)
       .then(r => {
         console.log('Models status:', r.status);  // ← add this
         return r.json();

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/useAuth';
-
-const API = 'http://localhost:8000';
+import { BASE_URL } from '@/config';
+// const API = 'http://localhost:8000';
 
 export default function LoginForm() {
   const { setUser } = useAuth();
@@ -21,7 +21,7 @@ export default function LoginForm() {
     setError('');
     setLoading(true);
     try {
-      const response = await fetch(`${API}/admin/login`, {
+      const response = await fetch(`${BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ loginusername, password }),

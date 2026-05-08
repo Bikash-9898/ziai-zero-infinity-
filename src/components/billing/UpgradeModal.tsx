@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { X, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import { comparePlans, initiateEsewa, type PlanComparison } from "@/api/billing";
 import PlanCard from "./PlanCard";
+import { BASE_URL } from '@/config';
 
-const API = "http://localhost:8000";
+// const API = "http://localhost:8000";
 
 interface UpgradeModalProps {
   userId: string;
@@ -67,7 +68,7 @@ export default function UpgradeModal({ userId, currentPlan, onClose, onPlanChang
     setActionLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/api/billing/switch-free/${userId}`, { method: "POST" });
+      const res = await fetch(`${BASE_URL}/billing/switch-free/${userId}`, { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.detail ?? "Switch failed");
@@ -87,7 +88,7 @@ export default function UpgradeModal({ userId, currentPlan, onClose, onPlanChang
     setActionLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/api/billing/cancel/${userId}`, { method: "POST" });
+      const res = await fetch(`${BASE_URL}/billing/cancel/${userId}`, { method: "POST" });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.detail ?? "Failed to schedule downgrade");
@@ -352,7 +353,7 @@ function ConfirmBox({
       <button
         onClick={onConfirm}
         disabled={loading}
-        className="py-[13px] rounded-[10px] border-none text-white font-bold text-sm cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+        className="py-3.25 rounded-[10px] border-none text-white font-bold text-sm cursor-pointer flex items-center justify-center gap-2 transition-opacity duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
         style={{ background: `linear-gradient(135deg, ${confirmColor}, ${confirmColor}bb)` }}
       >
         {loading

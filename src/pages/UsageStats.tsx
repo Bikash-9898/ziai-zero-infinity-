@@ -30,7 +30,7 @@ export default function UsageStats() {
         @keyframes shimmer { to { background-position: -200% 0; } }
       `}</style>
 
-      <div className="max-w-[1100px] mx-auto flex flex-col gap-10">
+      <div className="max-w-275 mx-auto flex flex-col gap-10">
 
         {/* Header */}
         <div>
@@ -48,7 +48,7 @@ export default function UsageStats() {
             Current Period Usage
           </p>
           {usage && (
-            <div className="flex gap-6 px-[18px] py-3.5 bg-slate-800 rounded-[10px] mb-5 flex-wrap">
+            <div className="flex gap-6 px-4.5 py-3.5 bg-slate-800 rounded-[10px] mb-5 flex-wrap">
               <div className="flex flex-col gap-0.5">
                 <span className="text-[10px] uppercase tracking-[0.08em] text-slate-500">Plan</span>
                 <span className="text-[13px] font-['JetBrains_Mono',monospace] text-slate-400">{usage.plan}</span>
@@ -68,7 +68,7 @@ export default function UsageStats() {
             </div>
           )}
           {usageLoading ? (
-            <div className="h-[120px] rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
+            <div className="h-30 rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-size-[200%_100%] animate-[shimmer_1.5s_infinite]" />
           ) : usage ? (
             <div className="flex flex-col gap-5">
               <UsageBar
@@ -102,25 +102,25 @@ export default function UsageStats() {
         {/* Summary cards */}
         {summary && (
           <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-4">
-            <div className="bg-slate-800 rounded-xl px-[18px] py-4 flex flex-col gap-1">
+            <div className="bg-slate-800 rounded-xl px-4.5 py-4 flex flex-col gap-1">
               <span className="text-[11px] text-slate-500 uppercase tracking-[0.08em]">Total Tokens</span>
               <span className="text-[22px] font-extrabold text-slate-100 tracking-[-0.03em] tabular-nums">
                 {formatTokens(summary.daily_tokens.reduce((a, d) => a + d.tokens, 0))}
               </span>
             </div>
-            <div className="bg-slate-800 rounded-xl px-[18px] py-4 flex flex-col gap-1">
+            <div className="bg-slate-800 rounded-xl px-4.5 py-4 flex flex-col gap-1">
               <span className="text-[11px] text-slate-500 uppercase tracking-[0.08em]">Total Requests</span>
               <span className="text-[22px] font-extrabold text-slate-100 tracking-[-0.03em] tabular-nums">
                 {summary.daily_tokens.reduce((a, d) => a + d.requests, 0).toLocaleString()}
               </span>
             </div>
-            <div className="bg-slate-800 rounded-xl px-[18px] py-4 flex flex-col gap-1">
+            <div className="bg-slate-800 rounded-xl px-4.5 py-4 flex flex-col gap-1">
               <span className="text-[11px] text-slate-500 uppercase tracking-[0.08em]">Total Cost</span>
               <span className="text-[22px] font-extrabold text-slate-100 tracking-[-0.03em] tabular-nums">
                 NPR {Number(summary.total_cost).toFixed(2)}
               </span>
             </div>
-            <div className="bg-slate-800 rounded-xl px-[18px] py-4 flex flex-col gap-1">
+            <div className="bg-slate-800 rounded-xl px-4.5 py-4 flex flex-col gap-1">
               <span className="text-[11px] text-slate-500 uppercase tracking-[0.08em]">Avg Latency</span>
               <span className="text-[22px] font-extrabold text-slate-100 tracking-[-0.03em] tabular-nums">
                 {summary.avg_latency_ms ? `${Math.round(summary.avg_latency_ms)}ms` : "—"}
@@ -140,7 +140,7 @@ export default function UsageStats() {
                 <button
                   key={d}
                   onClick={() => setDays(d)}
-                  className={`px-3 py-[5px] rounded-lg text-xs font-semibold cursor-pointer border transition-all duration-150 font-['Syne',sans-serif] ${
+                  className={`px-3 py-1.25 rounded-lg text-xs font-semibold cursor-pointer border transition-all duration-150 font-['Syne',sans-serif] ${
                     days === d
                       ? "bg-slate-800 border-slate-700 text-slate-400"
                       : "bg-transparent border-transparent text-slate-500 hover:text-slate-300"
@@ -152,13 +152,13 @@ export default function UsageStats() {
             </div>
           </div>
           {summaryLoading ? (
-            <div className="h-[120px] rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
+            <div className="h-30 rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-size-[200%_100%] animate-[shimmer_1.5s_infinite]" />
           ) : summary && summary.daily_tokens.length > 0 ? (
-            <div className="flex items-end gap-[3px] h-[100px]">
+            <div className="flex items-end gap-0.75 h-25">
               {summary.daily_tokens.map((d) => (
                 <div key={d.date} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
                   <div
-                    className="w-full rounded-t-[4px] bg-linear-to-b from-indigo-500 to-indigo-700 min-h-[2px] transition-[height] duration-400 ease-[cubic-bezier(0.4,0,0.2,1)] cursor-pointer hover:brightness-125"
+                    className="w-full rounded-t-sm bg-linear-to-b from-indigo-500 to-indigo-700 min-h-0.5 transition-[height] duration-400 ease-in-out cursor-pointer hover:brightness-125"
                     style={{ height: `${Math.max((d.tokens / maxDailyTokens) * 100, 2)}%` }}
                     title={`${new Date(d.date).toLocaleDateString("en-NP")}: ${formatTokens(d.tokens)} tokens, ${d.requests} requests`}
                   />
@@ -209,7 +209,7 @@ export default function UsageStats() {
             Request History ({total.toLocaleString()} total)
           </p>
           {histLoading ? (
-            <div className="h-[120px] rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-[length:200%_100%] animate-[shimmer_1.5s_infinite]" />
+            <div className="h-30 rounded-[10px] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 bg-size-[200%_100%] animate-[shimmer_1.5s_infinite]" />
           ) : (
             <>
               <table className="w-full border-collapse text-[13px]">
@@ -245,7 +245,7 @@ export default function UsageStats() {
                       </td>
                       <td className="py-3 border-b border-[#0f172a] text-slate-400 last:border-b-0">
                         <span
-                          className="inline-block w-[7px] h-[7px] rounded-full mr-1.5"
+                          className="inline-block w-1.75 h-1.75 rounded-full mr-1.5"
                           style={{ background: STATUS_COLORS[r.status] ?? "#64748b" }}
                         />
                         {r.status}

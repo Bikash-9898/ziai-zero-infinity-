@@ -1,29 +1,12 @@
-import { useEffect } from 'react';
-import { useAuth } from '@/context/useAuth';
 import { useImageStore } from '@/store/useImageStore';
-import { fetchImageHistory } from '@/services/imageService';
 import ImagePromptInput from './ImagePromptInput';
 import ImageResult from './ImageResult';
 import ImageHistory from './ImageHistory';
 
 export default function ImageTab() {
-  const { user } = useAuth();
-  const { history, setHistory } = useImageStore();
+  const { history } = useImageStore();
 
-  // useEffect(() => {
-  //   if (user?.email) {
-  //     fetchImageHistory(user.email)
-  //       .then(setHistory)
-  //       .catch(console.error);
-  //   }
-  // }, [user?.email, setHistory]);
-  useEffect(() => {
-    if (user?.email && history.length === 0) {  // ← only fetch if history empty
-      fetchImageHistory(user.email)
-        .then(setHistory)
-        .catch(console.error);
-    }
-  }, [user?.email, setHistory, history.length]);  
+  // ← history fetch removed from here, now lives in imageStore.tsx
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">

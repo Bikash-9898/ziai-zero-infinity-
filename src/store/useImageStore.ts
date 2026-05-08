@@ -1,6 +1,4 @@
-import { useContext } from 'react';
-
-import { createContext } from 'react';
+import { useContext, createContext } from 'react';
 import type { ImageStore } from '@/types/image';
 
 export const ImageContext = createContext<ImageStore | null>(null);

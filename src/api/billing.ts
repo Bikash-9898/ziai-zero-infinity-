@@ -1,8 +1,9 @@
 // src/api/billing.ts
 // Billing API client for React frontend
 // Provides functions to interact with the backend billing and usage APIs
+import { BASE_URL } from '@/config';
 
-const API = "http://localhost:8000";
+// const API = "http://localhost:8000";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -116,7 +117,7 @@ export interface KhaltiInitiateResponse {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(`${BASE_URL}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
@@ -130,51 +131,51 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 // ── Plans ────────────────────────────────────────────────────────────────────
 
 export const getPlans = (): Promise<PlanInfo[]> =>
-  apiFetch("/api/plans/");
+  apiFetch("/plans/");
 
 export const getPlan = (plan: string): Promise<PlanInfo> =>
-  apiFetch(`/api/plans/${plan}`);
+  apiFetch(`/plans/${plan}`);
 
 export const comparePlans = (userId: string): Promise<PlanComparison[]> =>
-  apiFetch(`/api/plans/compare/${userId}`);
+  apiFetch(`/plans/compare/${userId}`);
 
 // ── Billing ──────────────────────────────────────────────────────────────────
 
 export const getBillingStatus = (userId: string): Promise<BillingStatus> =>
-  apiFetch(`/api/billing/status/${userId}`);
+  apiFetch(`/billing/status/${userId}`);
 
 export const getSubscription = (userId: string): Promise<SubscriptionResponse> =>
-  apiFetch(`/api/billing/subscription/${userId}`);
+  apiFetch(`/billing/subscription/${userId}`);
 
 export const getPaymentHistory = (
   userId: string,
   limit = 20,
   offset = 0
 ): Promise<PaymentRecord[]> =>
-  apiFetch(`/api/billing/payments/${userId}?limit=${limit}&offset=${offset}`);
+  apiFetch(`/billing/payments/${userId}?limit=${limit}&offset=${offset}`);
 
 export const cancelSubscription = (userId: string): Promise<{ message: string; period_end: string }> =>
-  apiFetch(`/api/billing/cancel/${userId}`, { method: "POST" });
+  apiFetch(`/billing/cancel/${userId}`, { method: "POST" });
 
 // ── Payments ─────────────────────────────────────────────────────────────────
 
 export const initiateEsewa = (plan: string, userId: string): Promise<EsewaPayloadResponse> =>
-  apiFetch(`/api/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
+  apiFetch(`/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
 
 // export const initiateKhalti = (plan: string, userId: string): Promise<KhaltiInitiateResponse> =>
-//   apiFetch(`/api/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
+//   apiFetch(`/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
 
 // ── Usage ────────────────────────────────────────────────────────────────────
 
 export const getUsage = (userId: string): Promise<UsageResponse> =>
-  apiFetch(`/api/usage/${userId}`);
+  apiFetch(`/usage/${userId}`);
 
 export const getUsageHistory = (
   userId: string,
   page = 1,
   pageSize = 20
 ): Promise<UsageHistoryResponse> =>
-  apiFetch(`/api/usage/${userId}/history?page=${page}&page_size=${pageSize}`);
+  apiFetch(`/usage/${userId}/history?page=${page}&page_size=${pageSize}`);
 
 export const getUsageSummary = (userId: string, days = 30): Promise<UsageSummaryResponse> =>
-  apiFetch(`/api/usage/${userId}/summary?days=${days}`);
+  apiFetch(`/usage/${userId}/summary?days=${days}`);

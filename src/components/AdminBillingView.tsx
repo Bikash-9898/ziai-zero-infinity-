@@ -1,8 +1,9 @@
 // src/components/AdminBillingView.tsx
 import { useState, useEffect } from 'react';
+import { BASE_URL, ADMIN_KEY } from '@/config';
 
-const API = 'http://localhost:8000';
-const ADMIN_KEY = 'supersecretadminkey';
+// const API = 'http://localhost:8000';
+// const ADMIN_KEY = 'supersecretadminkey';
 
 const PLAN_COLORS: Record<string, string> = {
   free: '#64748b', basic: '#06b6d4', pro: '#6366f1', enterprise: '#f59e0b',
@@ -74,7 +75,7 @@ export default function AdminBillingView() {
   const [error, setError]     = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/api/admin/billing/stats`, {
+    fetch(`${BASE_URL}/admin/billing/stats`, {
       headers: { 'X-Admin-Key': ADMIN_KEY },
     })
       .then(r => r.ok ? r.json() : Promise.reject(r.statusText))

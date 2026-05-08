@@ -1,4 +1,5 @@
-const BASE_URL = 'http://localhost:8000/api';
+import { BASE_URL } from '@/config';
+// const BASE_URL = 'http://localhost:8000/api';
 
 export interface SendMessageParams {
   message: string;
