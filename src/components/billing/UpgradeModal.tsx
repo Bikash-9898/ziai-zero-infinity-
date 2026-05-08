@@ -26,7 +26,8 @@ interface UpgradeModalProps {
 // src/components/billing/UpgradeModal.tsx
 type Step = "plans" | "confirm-free" | "confirm-downgrade" | "payment" | "processing";
 
-export default function UpgradeModal({ userId, currentPlan, onClose, onPlanChanged }: UpgradeModalProps) {
+// export default function UpgradeModal({ userId, currentPlan, onClose, onPlanChanged }: UpgradeModalProps) { could add currentPlan to props for better UX (e.g. highlight current plan, disable it in selection, etc.)
+export default function UpgradeModal({ userId, onClose, onPlanChanged }: UpgradeModalProps) {
   const [plans, setPlans]                 = useState<PlanComparison[]>([]);
   const [loading, setLoading]             = useState(true);
   const [step, setStep]                   = useState<Step>("plans");

@@ -14,9 +14,10 @@ interface ImageModel {
 interface Props {
   value: string;
   onChange: (modelId: string) => void;
+  onModelsLoaded?: (models: ImageModel[]) => void;
 }
 
-export default function ImageModelSelector({ value, onChange }: Props) {
+export default function ImageModelSelector({ value, onChange, onModelsLoaded }: Props) {
   const [models, setModels]     = useState<ImageModel[]>([]);
   const [loading, setLoading]   = useState(true);
   const [open, setOpen]         = useState(false);
@@ -36,6 +37,7 @@ export default function ImageModelSelector({ value, onChange }: Props) {
       .then(data => {
         console.log('Models data:', data);        // ← add this
         setModels(data);
+        onModelsLoaded?.(data);
         setLoading(false);
       })
       .catch(err => {
@@ -71,7 +73,7 @@ export default function ImageModelSelector({ value, onChange }: Props) {
 
       {/* Dropdown */}
       {open && !loading && (
-        <div className="absolute top-full left-0 mt-1.5 w-full bg-[#080c14] border border-slate-800 rounded-xl overflow-hidden z-50 shadow-xl shadow-black/50">
+        <div className="absolute top-full left-0 mt-1.5 w-45 h-30 bg-[#080c14] border border-slate-800 rounded-xl z-50 shadow-xl shadow-black/50 overflow-y-auto">
           {models.map(model => (
             <button
               key={model.id}

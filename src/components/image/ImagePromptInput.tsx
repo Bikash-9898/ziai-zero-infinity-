@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Zap } from 'lucide-react';
 import { useImageStore } from '@/store/useImageStore';
-import { useAuth } from '@/context/useAuth';
+// import { useAuth } from '@/context/useAuth';
 import ImageModelSelector from './ImageModelSelector';
+import { ImageModel } from '@/types/image';
 
 const STYLE_TAGS = ['Photorealistic', 'Cinematic', 'Anime', 'Oil Painting', '3D Render', 'Pixel Art'];
 
@@ -14,14 +15,17 @@ const RATIOS = [
 
 export default function ImagePromptInput() {
   const { generate, status } = useImageStore();
-  const { user } = useAuth();                        // ← get user here to debug
+  // const { user } = useAuth();                        // ← get user here to debug
   const [prompt, setPrompt]             = useState('');
   const [negPrompt, setNegPrompt]       = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [model, setModel]               = useState('flux');
   const [ratio, setRatio]               = useState(RATIOS[0]);
   const [showNeg, setShowNeg]           = useState(false);
+  const [models, setModels]             = useState<ImageModel[]>([]);
   const isGenerating = status === 'generating';
+
+  const selectedCredits = models.find(m => m.id === model)?.credits_per_image ?? 1.0;
 
   function toggleTag(tag: string) {
     setSelectedTags(prev =>
@@ -35,9 +39,9 @@ export default function ImagePromptInput() {
   }
 
   async function handleGenerate() {
-    console.log('user object:', user);
-    console.log('prompt:', prompt);
-    console.log('model:', model);
+    // console.log('user object:', user);
+    // console.log('prompt:', prompt);
+    // console.log('model:', model);
 
     if (!prompt.trim()) return;
     if (isGenerating) return;
@@ -59,7 +63,6 @@ export default function ImagePromptInput() {
     <div className="shrink-0 border-b border-white/5 p-4">
       <div className="max-w-4xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-4">
 
-        {/* Main prompt */}
         <textarea
           rows={3}
           value={prompt}
@@ -68,7 +71,6 @@ export default function ImagePromptInput() {
           className="w-full bg-transparent text-slate-200 text-sm font-mono resize-none outline-none placeholder-slate-700 leading-relaxed"
         />
 
-        {/* Style tags */}
         <div className="flex flex-wrap gap-2 mt-3">
           <span className="text-[9px] uppercase tracking-widest text-slate-600 self-center mr-1">Style</span>
           {STYLE_TAGS.map(tag => (
@@ -86,15 +88,16 @@ export default function ImagePromptInput() {
           ))}
         </div>
 
-        {/* Controls */}
-        <div className="grid grid-cols-3 gap-3 mt-4">
-          {/* Model */}
+        <div className="grid grid-cols-3 gap-3 mt-4 overflow-visible">
           <div>
             <p className="text-[9px] uppercase tracking-widest text-slate-600 mb-1.5">Model</p>
-            <ImageModelSelector value={model} onChange={setModel} />
+            <ImageModelSelector
+              value={model}
+              onChange={setModel}
+              onModelsLoaded={setModels}
+            />
           </div>
 
-          {/* Aspect ratio */}
           <div>
             <p className="text-[9px] uppercase tracking-widest text-slate-600 mb-1.5">Aspect Ratio</p>
             <div className="flex gap-1">
@@ -114,7 +117,6 @@ export default function ImagePromptInput() {
             </div>
           </div>
 
-          {/* Negative prompt toggle */}
           <div>
             <p className="text-[9px] uppercase tracking-widest text-slate-600 mb-1.5">Negative Prompt</p>
             <button
@@ -130,7 +132,6 @@ export default function ImagePromptInput() {
           </div>
         </div>
 
-        {/* Negative prompt input */}
         {showNeg && (
           <textarea
             rows={1}
@@ -141,9 +142,11 @@ export default function ImagePromptInput() {
           />
         )}
 
-        {/* Footer row */}
         <div className="flex items-center justify-between mt-4">
-          <span className="text-[10px] font-mono text-slate-700">1.0 credit per generation</span>
+          {/* ← dynamic credits */}
+          <span className="text-[10px] font-mono text-slate-700">
+            {selectedCredits} credit per generation
+          </span>
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
