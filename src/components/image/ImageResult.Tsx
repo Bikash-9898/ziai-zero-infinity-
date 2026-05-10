@@ -1,10 +1,11 @@
+// src/components/image/ImageResult.tsx
 import { useState } from 'react';
 import { Download, RefreshCw, Share2, AlertCircle } from 'lucide-react';
 import { useImageStore } from '@/store/useImageStore';
 
 export default function ImageResult() {
   const { status, currentImage, error } = useImageStore();
-  const [hovered, setHovered] = useState(false);
+  const [hovered, setHovered]           = useState(false);
 
   if (status === 'idle') return null;
 
@@ -31,24 +32,32 @@ export default function ImageResult() {
             Generating image…
           </span>
         </div>
-        <div className="w-full max-w-md aspect-square rounded-2xl bg-slate-900 overflow-hidden relative">
-          <div className="absolute inset-0 bg-linear-to-r from-slate-900 via-slate-800 to-slate-900 animate-pulse" />
-          <div className="absolute bottom-4 left-4 right-4 space-y-2">
-            <div className="h-2 bg-slate-800 rounded animate-pulse w-3/4" />
-            <div className="h-2 bg-slate-800 rounded animate-pulse w-1/2" />
-          </div>
-        </div>
+        <div className="w-full max-w-md aspect-square rounded-2xl bg-slate-900 overflow-hidden relative animate-pulse" />
       </div>
     );
   }
 
-  // success
-  function handleDownload() {
+  // ── Download — works for both base64 data URIs and external URLs ──────────
+  async function handleDownload() {
     if (!currentImage) return;
-    const a = document.createElement('a');
-    a.href = currentImage;
-    a.download = `generated-${Date.now()}.png`;
-    a.click();
+    try {
+      let url: string;
+      if (currentImage.startsWith('data:')) {
+        // base64 from HuggingFace — use directly
+        url = currentImage;
+      } else {
+        // external URL (Pollinations / fal.ai) — fetch as blob first
+        const blob = await fetch(currentImage).then(r => r.blob());
+        url = URL.createObjectURL(blob);
+      }
+      const a      = document.createElement('a');
+      a.href       = url;
+      a.download   = `generated-${Date.now()}.png`;
+      a.click();
+      if (!currentImage.startsWith('data:')) URL.revokeObjectURL(url);
+    } catch {
+      console.error('Download failed');
+    }
   }
 
   return (
@@ -65,11 +74,7 @@ export default function ImageResult() {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        <img
-          src={currentImage!}
-          alt="Generated"
-          className="w-full object-cover"
-        />
+        <img src={currentImage!} alt="Generated" className="w-full object-cover" />
 
         <div
           className={`absolute bottom-0 left-0 right-0 p-3 flex gap-2 transition-opacity duration-200 ${
@@ -83,7 +88,11 @@ export default function ImageResult() {
           >
             <Download size={11} /> Save
           </button>
-          <button className="flex-1 flex items-center justify-center gap-1.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg py-2 text-[11px] font-mono text-slate-300 transition-all">
+          {/* Remix: pre-fills the prompt — wiring to store needs imageStore to expose setPrompt or similar */}
+          <button
+            title="Coming soon"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-slate-800/80 border border-slate-700 rounded-lg py-2 text-[11px] font-mono text-slate-600 cursor-not-allowed"
+          >
             <RefreshCw size={11} /> Remix
           </button>
           <button className="flex items-center justify-center bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-2 text-slate-400 transition-all">

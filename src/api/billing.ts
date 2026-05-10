@@ -1,11 +1,7 @@
 // src/api/billing.ts
-// Billing API client for React frontend
-// Provides functions to interact with the backend billing and usage APIs
-import { BASE_URL } from '@/config';
+import { apiJson } from './apiClient';   // ← sends JWT automatically, handles 401
 
-// const API = "http://localhost:8000";
-
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface PlanInfo {
   plan: string;
@@ -18,7 +14,7 @@ export interface PlanInfo {
 
 export interface PlanComparison extends PlanInfo {
   is_current: boolean;
-  action: "current" | "upgrade" | "downgrade";
+  action: 'current' | 'upgrade' | 'downgrade';
 }
 
 export interface SubscriptionResponse {
@@ -97,8 +93,8 @@ export interface UsageHistoryResponse {
 
 export interface UsageSummaryResponse {
   daily_tokens: { date: string; tokens: number; requests: number }[];
-  top_models: { model: string; count: number; tokens: number }[];
-  total_cost: number;
+  top_models:   { model: string; count: number; tokens: number }[];
+  total_cost:   number;
   avg_latency_ms: number | null;
 }
 
@@ -108,74 +104,49 @@ export interface EsewaPayloadResponse {
   transaction_uuid: string;
 }
 
-export interface KhaltiInitiateResponse {
-  payment_url: string;
-  pidx: string;
-  order_id: string;
-}
+// ── Plans ─────────────────────────────────────────────────────────────────────
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+export const getPlans       = (): Promise<PlanInfo[]>        => apiJson('/plans/');
+export const getPlan        = (plan: string): Promise<PlanInfo> => apiJson(`/plans/${plan}`);
+export const comparePlans   = (userId: string): Promise<PlanComparison[]> =>
+  apiJson(`/plans/compare/${userId}`);
 
-async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(error.detail ?? "API request failed");
-  }
-  return res.json();
-}
-
-// ── Plans ────────────────────────────────────────────────────────────────────
-
-export const getPlans = (): Promise<PlanInfo[]> =>
-  apiFetch("/plans/");
-
-export const getPlan = (plan: string): Promise<PlanInfo> =>
-  apiFetch(`/plans/${plan}`);
-
-export const comparePlans = (userId: string): Promise<PlanComparison[]> =>
-  apiFetch(`/plans/compare/${userId}`);
-
-// ── Billing ──────────────────────────────────────────────────────────────────
+// ── Billing ───────────────────────────────────────────────────────────────────
 
 export const getBillingStatus = (userId: string): Promise<BillingStatus> =>
-  apiFetch(`/billing/status/${userId}`);
+  apiJson(`/billing/status/${userId}`);
 
 export const getSubscription = (userId: string): Promise<SubscriptionResponse> =>
-  apiFetch(`/billing/subscription/${userId}`);
+  apiJson(`/billing/subscription/${userId}`);
 
 export const getPaymentHistory = (
   userId: string,
-  limit = 20,
-  offset = 0
+  limit  = 20,
+  offset = 0,
 ): Promise<PaymentRecord[]> =>
-  apiFetch(`/billing/payments/${userId}?limit=${limit}&offset=${offset}`);
+  apiJson(`/billing/payments/${userId}?limit=${limit}&offset=${offset}`);
 
-export const cancelSubscription = (userId: string): Promise<{ message: string; period_end: string }> =>
-  apiFetch(`/billing/cancel/${userId}`, { method: "POST" });
+export const cancelSubscription = (
+  userId: string,
+): Promise<{ message: string; period_end: string }> =>
+  apiJson(`/billing/cancel/${userId}`, { method: 'POST' });
 
-// ── Payments ─────────────────────────────────────────────────────────────────
+// ── Payments ──────────────────────────────────────────────────────────────────
 
 export const initiateEsewa = (plan: string, userId: string): Promise<EsewaPayloadResponse> =>
-  apiFetch(`/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
+  apiJson(`/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: 'POST' });
 
-// export const initiateKhalti = (plan: string, userId: string): Promise<KhaltiInitiateResponse> =>
-//   apiFetch(`/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: "POST" });
-
-// ── Usage ────────────────────────────────────────────────────────────────────
+// ── Usage ─────────────────────────────────────────────────────────────────────
 
 export const getUsage = (userId: string): Promise<UsageResponse> =>
-  apiFetch(`/usage/${userId}`);
+  apiJson(`/usage/${userId}`);
 
 export const getUsageHistory = (
   userId: string,
-  page = 1,
-  pageSize = 20
+  page     = 1,
+  pageSize = 20,
 ): Promise<UsageHistoryResponse> =>
-  apiFetch(`/usage/${userId}/history?page=${page}&page_size=${pageSize}`);
+  apiJson(`/usage/${userId}/history?page=${page}&page_size=${pageSize}`);
 
 export const getUsageSummary = (userId: string, days = 30): Promise<UsageSummaryResponse> =>
-  apiFetch(`/usage/${userId}/summary?days=${days}`);
+  apiJson(`/usage/${userId}/summary?days=${days}`);

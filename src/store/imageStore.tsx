@@ -1,3 +1,4 @@
+// src/store/imageStore.tsx
 import { useState, useCallback, useEffect } from 'react';
 import type { GenerationOptions, GeneratedImage, ImageStatus } from '@/types/image';
 import { generateImage, fetchImageHistory } from '@/services/imageService';
@@ -11,22 +12,22 @@ export function ImageProvider({ children }: { children: React.ReactNode }) {
   const [history, setHistory]           = useState<GeneratedImage[]>([]);
   const [error, setError]               = useState<string | null>(null);
 
-  // ← fetch history on mount / user change (removed from ImageTab)
+  // Fetch history on mount / user change
+  // No email needed — JWT handles identity
   useEffect(() => {
-    if (user?.email) {
-      fetchImageHistory(user.email)
-        .then(setHistory)
-        .catch(console.error);
-    }
+    if (!user?.email) return;
+    fetchImageHistory()           // ← no userEmail param
+      .then(setHistory)
+      .catch(console.error);
   }, [user?.email]);
 
   const generate = useCallback(async (opts: GenerationOptions) => {
-    if (!user?.email) return;
+    if (!user) return;            // ← guard on user existence, not email
 
     setStatus('generating');
     setError(null);
     try {
-      const result = await generateImage(opts, user.email);
+      const result = await generateImage(opts);   // ← no userEmail param
       setCurrentImage(result.image_url);
       setHistory(prev => [result, ...prev]);
       setStatus('success');

@@ -1,49 +1,28 @@
+// src/components/image/ImageModelSelector.tsx
 import { useEffect, useState } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
-import { BASE_URL } from '@/config';
-
-// const API_BASE = "http://localhost:8000/api"; // ← change this to your backend URL
-
-interface ImageModel {
-  id: string;
-  name: string;
-  provider: string;
-  credits_per_image: number;
-}
+import { apiJson } from '@/api/apiClient';   // ← JWT-aware, no hardcoded URL
+import type { ImageModel } from '@/types/image';
 
 interface Props {
   value: string;
   onChange: (modelId: string) => void;
-  onModelsLoaded?: (models: ImageModel[]) => void;
+  onModelsLoaded?: (models: ImageModel[]) => void;   // ← from new branch
 }
 
-export default function ImageModelSelector({ value, onChange, onModelsLoaded }: Props) {
-  const [models, setModels]     = useState<ImageModel[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [open, setOpen]         = useState(false);
+export default function ImageModelSelector({ value, onChange }: Props) {
+  const [models, setModels]   = useState<ImageModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen]       = useState(false);
 
-  // useEffect(() => {
-  //   fetch(`${API_BASE}/image/models`)
-  //     .then(r => r.json())
-  //     .then(data => { setModels(data); setLoading(false); })
-  //     .catch(() => setLoading(false));
-  // }, []);
   useEffect(() => {
-    fetch(`${BASE_URL}/image/models`)
-      .then(r => {
-        console.log('Models status:', r.status);  // ← add this
-        return r.json();
-      })
+    apiJson<ImageModel[]>('/image/models')
       .then(data => {
-        console.log('Models data:', data);        // ← add this
         setModels(data);
         onModelsLoaded?.(data);
         setLoading(false);
       })
-      .catch(err => {
-        console.error('Models fetch failed:', err); // ← add this
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   }, []);
 
   const selected = models.find(m => m.id === value);
@@ -71,9 +50,8 @@ export default function ImageModelSelector({ value, onChange, onModelsLoaded }: 
         )}
       </button>
 
-      {/* Dropdown */}
       {open && !loading && (
-        <div className="absolute top-full left-0 mt-1.5 w-45 h-30 bg-[#080c14] border border-slate-800 rounded-xl z-50 shadow-xl shadow-black/50 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1.5 w-full max-h-48 bg-[#080c14] border border-slate-800 rounded-xl overflow-hidden z-50 shadow-xl shadow-black/50 overflow-y-auto">
           {models.map(model => (
             <button
               key={model.id}

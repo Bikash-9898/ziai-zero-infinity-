@@ -1,19 +1,16 @@
+// src/components/ProtectedRoute.tsx
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/useAuth';
-import type { JSX } from 'react';
+import { tokenStore } from '@/api/auth';
+import type { ReactNode } from 'react';
 
-// export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-export const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { user, loading } = useAuth();
+export function ProtectedRoute({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
 
-  if (loading) return <div>Loading...</div>; // Prevent flash of login screen
-  // if (loading) return <div className="bg-black h-screen" />;
-
-  if (!user) {
-    // If not logged in, send them back to the landing page
+  // Require both a user object in state AND a valid stored JWT
+  if (!user || !tokenStore.get()) {
     return <Navigate to="/" replace />;
   }
 
-  // return <>{children}</>;
-  return children;
-};
+  return <>{children}</>;
+}

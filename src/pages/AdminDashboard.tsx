@@ -1,6 +1,5 @@
 // src/pages/AdminDashboard.tsx
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, LogOut, PanelRight, X, CreditCard, LayoutDashboardIcon } from 'lucide-react';
 import type { User } from '@/types/types';
 import UserTable from '@/components/UserTable';
@@ -10,18 +9,8 @@ import LoginForm from '@/components/LoginForm/LoginForm';
 import AdminBillingView from '@/components/AdminBillingView';
 import { BASE_URL, ADMIN_KEY } from '@/config';
 
-// const API ='http://localhost:8000';
-// const ADMIN_KEY= "supersecretadminkey"
-// console.log('API URL:', API);
-
-
-
-// ─────────────────────────────────────────────────────────────
-// Main AdminDashboard
-// ─────────────────────────────────────────────────────────────
 const AdminDashboard = () => {
-  const { logout, user } = useAuth();                          // ← from v2
-  const navigate = useNavigate();                              // ← from v2
+  const { logout, user }                    = useAuth();
   const [activeView, setActiveView]         = useState<string>('overview');
   const [users, setUsers]                   = useState<User[]>([]);
   const [loading, setLoading]               = useState(true);
@@ -32,20 +21,14 @@ const AdminDashboard = () => {
       headers: { 'X-Admin-Key': ADMIN_KEY },
     })
       .then((res) => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data: User[]) => {
-        setUsers(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error('Error fetching users from FastAPI:', err);
-        setLoading(false);
-      });
+      .then((data: User[]) => { setUsers(data); setLoading(false); })
+      .catch((err) => { console.error('Error fetching users:', err); setLoading(false); });
   }, []);
 
-  // ── Auth guard (from v2) ──────────────────────────────────
+  // Auth guard — shows login form if no user in context
   if (!user) {
     return (
       <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center px-4">
@@ -63,17 +46,18 @@ const AdminDashboard = () => {
     );
   }
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#0a0f1e] text-indigo-400 text-lg">
         Loading...
       </div>
     );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-[#0a0f1e] text-slate-100 font-sans overflow-hidden">
 
-      {/* LEFT SIDEBAR */}
+      {/* Sidebar */}
       <aside className="hidden md:flex w-64 border-r border-slate-800 flex-col bg-[#0d1224] shrink-0">
         <div className="p-6 text-xl font-bold tracking-tight text-indigo-400">
           AI_CORE Admin
@@ -86,7 +70,7 @@ const AdminDashboard = () => {
         <div className="p-4 border-t border-slate-800">
           <button
             className="flex items-center space-x-3 text-slate-400 hover:text-red-400 transition-colors w-full px-4 py-2"
-            onClick={logout}                                   // ← wired up from v2
+            onClick={logout}
           >
             <LogOut size={20} />
             <span>Logout</span>
@@ -94,7 +78,7 @@ const AdminDashboard = () => {
         </div>
       </aside>
 
-      {/* MAIN CONTENT */}
+      {/* Main */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="shrink-0 px-4 md:px-10 pt-4 md:pt-8 pb-4 flex justify-between items-center">
           <h1 className="text-xl md:text-3xl font-bold capitalize tracking-tight">
@@ -122,7 +106,6 @@ const AdminDashboard = () => {
             {activeView === 'billing'  && <AdminBillingView />}
           </div>
 
-          {/* Backdrop for right panel */}
           <div
             className={`lg:hidden fixed inset-0 z-10 bg-black/40 transition-opacity duration-300 ${
               rightPanelOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
@@ -130,17 +113,14 @@ const AdminDashboard = () => {
             onClick={() => setRightPanelOpen(false)}
           />
 
-          {/* RIGHT SIDEBAR */}
-          <aside
-            className={`
-              shrink-0 w-72 border-l border-slate-800 bg-[#0d1224]/95 backdrop-blur-sm
-              p-6 flex flex-col space-y-8
-              lg:relative lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto
-              fixed right-0 top-0 h-full z-20
-              transition-all duration-300 ease-in-out
-              ${rightPanelOpen ? 'translate-x-0 opacity-100 shadow-2xl shadow-black/60' : 'translate-x-full opacity-0 pointer-events-none lg:pointer-events-auto'}
-            `}
-          >
+          <aside className={`
+            shrink-0 w-72 border-l border-slate-800 bg-[#0d1224]/95 backdrop-blur-sm
+            p-6 flex flex-col space-y-8
+            lg:relative lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto
+            fixed right-0 top-0 h-full z-20
+            transition-all duration-300 ease-in-out
+            ${rightPanelOpen ? 'translate-x-0 opacity-100 shadow-2xl shadow-black/60' : 'translate-x-full opacity-0 pointer-events-none lg:pointer-events-auto'}
+          `}>
             <button
               className="lg:hidden self-end -mt-2 -mr-2 p-1.5 rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition-colors"
               onClick={() => setRightPanelOpen(false)}
@@ -154,9 +134,9 @@ const AdminDashboard = () => {
                 API Infrastructure
               </h3>
               <div className="space-y-4">
-                <StatusItem label="GPT-4o"     status="Operational" latency="240ms" />
-                <StatusItem label="Claude 3.5" status="Operational" latency="310ms" />
-                <StatusItem label="Vector DB"  status="High Load"   latency="890ms" color="text-yellow-400" />
+                <StatusItem label="Llama 3.1"  status="Operational" latency="240ms" />
+                <StatusItem label="Qwen 2.5"   status="Operational" latency="310ms" />
+                <StatusItem label="Mistral 7B" status="High Load"   latency="890ms" color="text-yellow-400" />
               </div>
             </section>
 
@@ -173,20 +153,18 @@ const AdminDashboard = () => {
         </div>
       </main>
 
-      {/* BOTTOM NAV (mobile) */}
+      {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 flex bg-[#0d1224] border-t border-slate-800 z-30">
         <MobileNavItem icon={<LayoutDashboard size={20} />} label="Overview" active={activeView === 'overview'} onClick={() => setActiveView('overview')} />
         <MobileNavItem icon={<Users size={20} />}           label="Users"    active={activeView === 'users'}    onClick={() => setActiveView('users')} />
         <MobileNavItem icon={<CreditCard size={20} />}      label="Billing"  active={activeView === 'billing'}  onClick={() => setActiveView('billing')} />
-        <MobileNavItem icon={<LogOut size={20} />}          label="Logout"   active={false}                     onClick={() => { logout(); navigate('/'); }} />
+        {/* navigate('/') removed — auth guard re-shows login form automatically */}
+        <MobileNavItem icon={<LogOut size={20} />}          label="Logout"   active={false}                     onClick={logout} />
       </nav>
     </div>
   );
 };
 
-// ─────────────────────────────────────────────────────────────
-// Sub-components
-// ─────────────────────────────────────────────────────────────
 type NavItemProps = { icon: React.ReactNode; label: string; active: boolean; onClick: () => void };
 
 const NavItem = ({ icon, label, active, onClick }: NavItemProps) => (

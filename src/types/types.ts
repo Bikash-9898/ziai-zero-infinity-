@@ -1,16 +1,6 @@
 // Types for user, billing, and usage data in the React frontend
 // These types are used across components, contexts, and API clients to ensure consistent data structures and type safety
 
-// export interface User {
-//   id: string;
-//   username: string;
-//   email: string;
-//   plan: 'Free' | 'Premium';
-//   createdAt: string; // ISO date string
-//   tokenLimit: number;
-//   tokenUsed: number;
-// }
-
 export interface User {
   id: string;        // UUID comes in as a string
   email: string;

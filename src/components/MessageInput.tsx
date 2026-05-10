@@ -1,25 +1,24 @@
 // src/components/MessageInput.tsx
 import { useState } from 'react';
 import { useChatStore } from '@/store/useChatStore';
-import { useAuth } from '@/context/useAuth';
 import { Send, Loader2 } from 'lucide-react';
 
 export default function MessageInput() {
   const [input, setInput] = useState('');
   const { send, sending } = useChatStore();
-  const { user } = useAuth();
 
   const handleSend = async () => {
     const trimmed = input.trim();
-    if (!trimmed || sending || !user?.email) return;
+    if (!trimmed || sending) return;
     setInput('');
-    await send(trimmed, user.email);
+    // No longer needs user email — backend reads from JWT
+    await send(trimmed);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSend();
+      void handleSend();
     }
   };
 
@@ -37,7 +36,7 @@ export default function MessageInput() {
             className="w-full py-4 pl-6 pr-16 bg-transparent text-white placeholder-slate-600 outline-none disabled:opacity-50 text-sm"
           />
           <button
-            onClick={handleSend}
+            onClick={() => void handleSend()}
             disabled={sending || !input.trim()}
             className="absolute right-3 p-2 bg-linear-to-br from-purple-600 to-blue-500 text-white rounded-xl hover:opacity-90 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-purple-600/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
           >

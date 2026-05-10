@@ -1,16 +1,15 @@
-// Authentication context provider for React app
-// Manages user state, login/logout functions, and persists auth info in localStorage
+// src/context/authContext.tsx
 import { useState, useCallback, type ReactNode } from 'react';
 import { AuthContext } from './context';
-import { authApi } from '@/api/auth';
+import { authApi, tokenStore } from '@/api/auth';
 import type { User } from '@/types/types';
 
-const STORAGE_KEY = 'zi_user'; // one constant, used everywhere
+const USER_KEY = 'zi_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = localStorage.getItem(USER_KEY);
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -19,13 +18,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [loading, setLoading] = useState(false);
 
-  const login = useCallback(async (googleToken: string) => {
+  const login = useCallback(async (googleAccessToken: string) => {
     setLoading(true);
     try {
-      const data = await authApi.verifyGoogleToken(googleToken);
+      // Backend now returns { verified, access_token, user }
+      // authApi.verifyGoogleToken stores the JWT automatically via tokenStore
+      const data = await authApi.verifyGoogleToken(googleAccessToken);
       if (data.verified) {
         setUser(data.user);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user)); // ✅ consistent key
+        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -37,7 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem(STORAGE_KEY); // ✅ consistent key
+    localStorage.removeItem(USER_KEY);
+    tokenStore.clear();           // ← clear JWT on logout
   }, []);
 
   return (
@@ -46,51 +48,3 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
-
-
-// import { useState, type ReactNode } from 'react';
-// import { AuthContext } from './context';
-// import { authApi } from '@/api/auth';
-// import type { User } from '@/types';
-
-// export function AuthProvider({ children }: { children: ReactNode }) {
-//   const [user, setUser] = useState<User | null>(() => {
-//     const savedUser = localStorage.getItem('zi_user');
-//     return savedUser ? JSON.parse(savedUser) : null;
-//   });
-
-//   const [loading] = useState(false);
-
-//   const login = async (token: string) => {
-//     const data = await authApi.verifyGoogleToken(token);
-//     if (data.verified) {
-//       setUser(data.user);
-//       localStorage.setItem('user', JSON.stringify(data.user));
-//     }
-//   };
-
-//   // const login = async (googleToken: string) => {
-//   //   setLoading(true);
-//   //   try {
-//   //     const { user } = await authApi.verifyGoogleToken(googleToken);
-//   //     setUser(user);
-//   //     localStorage.setItem('zi_user', JSON.stringify(user));
-//   //   } catch (error) {
-//   //     console.error('Login failed:', error);
-//   //     throw error;
-//   //   } finally {
-//   //     setLoading(false);
-//   //   }
-//   // };
-
-//   const logout = () => {
-//     setUser(null);
-//     localStorage.removeItem('zi_user');
-//   };
-
-//   return (
-//     <AuthContext.Provider value={{ user, loading, login, logout }}>
-//       {children}
-//     </AuthContext.Provider>
-//   );
-// }
