@@ -1,5 +1,5 @@
 // src/components/image/ImageModelSelector.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { apiJson } from '@/api/apiClient';   // ← JWT-aware, no hardcoded URL
 import type { ImageModel } from '@/types/image';
@@ -10,20 +10,21 @@ interface Props {
   onModelsLoaded?: (models: ImageModel[]) => void;   // ← from new branch
 }
 
-export default function ImageModelSelector({ value, onChange }: Props) {
+export default function ImageModelSelector({ value, onChange, onModelsLoaded }: Props) {
   const [models, setModels]   = useState<ImageModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen]       = useState(false);
+  const onModelsLoadedRef     = useRef(onModelsLoaded);  // ← stable ref
 
   useEffect(() => {
     apiJson<ImageModel[]>('/image/models')
       .then(data => {
         setModels(data);
-        onModelsLoaded?.(data);
+        onModelsLoadedRef.current?.(data);   // ← use ref, not prop directly
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, []);   // ← empty array, runs once only
 
   const selected = models.find(m => m.id === value);
 
@@ -51,7 +52,7 @@ export default function ImageModelSelector({ value, onChange }: Props) {
       </button>
 
       {open && !loading && (
-        <div className="absolute top-full left-0 mt-1.5 w-full max-h-48 bg-[#080c14] border border-slate-800 rounded-xl overflow-hidden z-50 shadow-xl shadow-black/50 overflow-y-auto">
+        <div className="absolute top-full left-0 mt-1.5 w-48 max-h-35 bg-[#080c14] border border-slate-800 rounded-xl overflow-hidden z-50 shadow-xl shadow-black/50 overflow-y-auto">
           {models.map(model => (
             <button
               key={model.id}

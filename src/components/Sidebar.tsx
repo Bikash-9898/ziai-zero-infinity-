@@ -187,14 +187,20 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = true, onClos
         )}
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-3 pb-2">
+        <div className="flex-1 overflow-y-auto px-3 pb-2
+          [&::-webkit-scrollbar]:w-1
+          [&::-webkit-scrollbar-track]:bg-transparent
+          [&::-webkit-scrollbar-thumb]:bg-purple-500/30
+          [&::-webkit-scrollbar-thumb]:rounded-full
+          hover:[&::-webkit-scrollbar-thumb]:bg-purple-500/60">
           {activeTab === 'chat' ? (
             <>
               <p className="px-1 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
                 Recent Chats
               </p>
               {loadingConversations ? (
-                <div className="flex justify-center py-6">
+                <div className="flex justify-center py-6
+                  ">
                   <Loader2 size={18} className="text-slate-600 animate-spin" />
                 </div>
               ) : conversations.length === 0 ? (
