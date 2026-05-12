@@ -1,34 +1,30 @@
 // src/pages/PlansPage.tsx
-// Standalone plan selection page — replaces the static UpgradePlans mock.
-// Fetches real plan data from the backend via comparePlans(), renders PlanCard
-// components, and opens UpgradeModal at the correct step on selection.
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/useAuth';
 import { useBillingStatus } from '@/hooks/useUsage';
 import PlanCard from '@/components/billing/PlanCard';
 import UpgradeModal from '@/components/billing/UpgradeModal';
-import { type PlanComparison } from '@/api/billing';
-import { useEffect } from 'react';
-import { comparePlans } from '@/api/billing';
+import { comparePlans, type PlanComparison } from '@/api/billing';
 
 export default function PlansPage() {
-  const { user, loading: authLoading }     = useAuth();
-  const userId                             = user?.id ?? '';
-  const { status, refetch }                = useBillingStatus(userId || null);
-  const [plans, setPlans]                  = useState<PlanComparison[]>([]);
-  const [plansLoading, setPlansLoading]    = useState(true);
-  const [plansError, setPlansError]        = useState<string | null>(null);
-  const [selected, setSelected]            = useState<PlanComparison | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const userId                         = user?.id ?? '';
+  const { status, refetch }            = useBillingStatus(userId || null);
+  const [plans, setPlans]              = useState<PlanComparison[]>([]);
+  const [plansLoading, setPlansLoading]= useState(false);
+  const [plansError, setPlansError]    = useState<string | null>(null);
+  const [selected, setSelected]        = useState<PlanComparison | null>(null);
 
   useEffect(() => {
     if (!userId) return;
-    setPlansLoading(true);
-    comparePlans(userId)
-      .then(setPlans)
-      .catch(() => setPlansError('Failed to load plans. Please try again.'))
-      .finally(() => setPlansLoading(false));
+    let cancelled = false;
+    Promise.resolve()
+      .then(() => { if (!cancelled) setPlansLoading(true); })
+      .then(() => comparePlans(userId))
+      .then(data  => { if (!cancelled) { setPlans(data); setPlansLoading(false); } })
+      .catch(()   => { if (!cancelled) { setPlansError('Failed to load plans.'); setPlansLoading(false); } });
+    return () => { cancelled = true; };
   }, [userId]);
 
   if (authLoading || !user) {
@@ -42,8 +38,6 @@ export default function PlansPage() {
   return (
     <div className="min-h-screen bg-[#060c18] text-slate-100 px-6 py-16 pb-20">
       <div className="max-w-5xl mx-auto flex flex-col gap-10">
-
-        {/* Header */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2 mb-5 px-4 py-1 text-xs font-medium text-purple-300 border border-purple-500/30 bg-purple-500/10 rounded-full">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
@@ -62,7 +56,6 @@ export default function PlansPage() {
           )}
         </div>
 
-        {/* Plan cards */}
         {plansLoading ? (
           <div className="flex justify-center py-16">
             <Loader2 size={32} className="text-indigo-500 animate-spin" />
@@ -72,23 +65,16 @@ export default function PlansPage() {
         ) : (
           <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
             {plans.map(plan => (
-              <PlanCard
-                key={plan.plan}
-                plan={plan}
-                onSelect={p => setSelected(p)}
-              />
+              <PlanCard key={plan.plan} plan={plan} onSelect={setSelected} />
             ))}
           </div>
         )}
 
-        {/* FAQ / footer note */}
         <p className="text-center text-xs text-slate-700">
           Subscriptions renew monthly. Cancel anytime from your billing page.
-          Enterprise limits are unlimited — contact us for custom pricing.
         </p>
       </div>
 
-      {/* UpgradeModal — opens at payment step for the selected plan */}
       {selected && (
         <UpgradeModal
           userId={userId}
@@ -97,7 +83,6 @@ export default function PlansPage() {
           onPlanChanged={() => {
             setSelected(null);
             refetch();
-            // Re-fetch plans so current badge updates
             comparePlans(userId).then(setPlans).catch(() => {});
           }}
         />

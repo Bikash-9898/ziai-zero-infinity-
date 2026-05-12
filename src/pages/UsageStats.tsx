@@ -128,7 +128,7 @@ export default function UsageStats() {
               {summary.daily_tokens.map(d => (
                 <div key={d.date} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
                   <div
-                    className="w-full rounded-t-sm bg-indigo-600 min-h-[2px] transition-[height] duration-300"
+                    className="w-full rounded-t-sm bg-indigo-600 min-h-0.5 transition-[height] duration-300"
                     style={{ height: `${Math.max((d.tokens / maxDailyTokens) * 100, 2)}%` }}
                     title={`${new Date(d.date).toLocaleDateString('en-NP')}: ${formatTokens(d.tokens)} tokens, ${d.requests} requests`}
                   />
@@ -176,7 +176,7 @@ export default function UsageStats() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-[13px] min-w-[640px]">
+                <table className="w-full border-collapse text-[13px] min-w-160">
                   <thead>
                     <tr>
                       {['Model', 'Tokens In', 'Tokens Out', 'Cost', 'Latency', 'Status', 'Time'].map(h => (

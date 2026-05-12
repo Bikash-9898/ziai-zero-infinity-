@@ -1,9 +1,9 @@
+// src/components/image/ImagePromptInput.tsx
 import { useState } from 'react';
 import { Zap } from 'lucide-react';
 import { useImageStore } from '@/store/useImageStore';
-// import { useAuth } from '@/context/useAuth';
 import ImageModelSelector from './ImageModelSelector';
-import { ImageModel } from '@/types/image';
+import type { ImageModel } from '@/types/image';
 
 const STYLE_TAGS = ['Photorealistic', 'Cinematic', 'Anime', 'Oil Painting', '3D Render', 'Pixel Art'];
 
@@ -14,8 +14,7 @@ const RATIOS = [
 ];
 
 export default function ImagePromptInput() {
-  const { generate, status } = useImageStore();
-  // const { user } = useAuth();                        // ← get user here to debug
+  const { generate, status }            = useImageStore();
   const [prompt, setPrompt]             = useState('');
   const [negPrompt, setNegPrompt]       = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -23,8 +22,8 @@ export default function ImagePromptInput() {
   const [ratio, setRatio]               = useState(RATIOS[0]);
   const [showNeg, setShowNeg]           = useState(false);
   const [models, setModels]             = useState<ImageModel[]>([]);
-  const isGenerating = status === 'generating';
 
+  const isGenerating    = status === 'generating';
   const selectedCredits = models.find(m => m.id === model)?.credits_per_image ?? 1.0;
 
   function toggleTag(tag: string) {
@@ -39,23 +38,17 @@ export default function ImagePromptInput() {
   }
 
   async function handleGenerate() {
-    // console.log('user object:', user);
-    // console.log('prompt:', prompt);
-    // console.log('model:', model);
-
-    if (!prompt.trim()) return;
-    if (isGenerating) return;
-
+    if (!prompt.trim() || isGenerating) return;
     try {
-      await generate({          // ← use store's generate, not direct generateImage
-        prompt: buildPrompt(),
+      await generate({
+        prompt:         buildPrompt(),
         negativePrompt: negPrompt || undefined,
         model,
-        width: ratio.w,
-        height: ratio.h,
+        width:          ratio.w,
+        height:         ratio.h,
       });
     } catch (err) {
-      console.error('generate threw error:', err);
+      console.error('generate error:', err);
     }
   }
 
@@ -71,6 +64,7 @@ export default function ImagePromptInput() {
           className="w-full bg-transparent text-slate-200 text-sm font-mono resize-none outline-none placeholder-slate-700 leading-relaxed"
         />
 
+        {/* Style tags */}
         <div className="flex flex-wrap gap-2 mt-3">
           <span className="text-[9px] uppercase tracking-widest text-slate-600 self-center mr-1">Style</span>
           {STYLE_TAGS.map(tag => (
@@ -88,6 +82,7 @@ export default function ImagePromptInput() {
           ))}
         </div>
 
+        {/* Controls */}
         <div className="grid grid-cols-3 gap-3 mt-4 overflow-visible">
           <div>
             <p className="text-[9px] uppercase tracking-widest text-slate-600 mb-1.5">Model</p>
@@ -143,13 +138,12 @@ export default function ImagePromptInput() {
         )}
 
         <div className="flex items-center justify-between mt-4">
-          {/* ← dynamic credits */}
           <span className="text-[10px] font-mono text-slate-700">
             {selectedCredits} credit per generation
           </span>
           <button
             onClick={handleGenerate}
-            disabled={isGenerating}
+            disabled={isGenerating || !prompt.trim()}
             className="flex items-center gap-2 bg-linear-to-r from-purple-600 to-blue-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all"
           >
             <Zap size={13} />

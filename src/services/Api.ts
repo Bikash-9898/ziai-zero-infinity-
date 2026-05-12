@@ -36,7 +36,7 @@ export interface SendMessageResponse {
 // ── Chat ──────────────────────────────────────────────────────
 
 export async function sendMessage(params: SendMessageParams): Promise<SendMessageResponse> {
-  return apiJson<SendMessageResponse>('/api/chat/send', {
+  return apiJson<SendMessageResponse>('/chat/send', {
     method: 'POST',
     body: JSON.stringify({
       message:         params.message,
@@ -48,15 +48,15 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
 
 // No longer needs user_email — identity comes from JWT
 export async function getConversations(): Promise<ConversationItem[]> {
-  return apiJson<ConversationItem[]>('/api/chat/conversations');
+  return apiJson<ConversationItem[]>('/chat/conversations');
 }
 
 export async function getMessages(conversationId: string): Promise<MessageItem[]> {
-  return apiJson<MessageItem[]>(`/api/chat/messages/${conversationId}`);
+  return apiJson<MessageItem[]>(`/chat/messages/${conversationId}`);
 }
 
 export async function deleteConversation(conversationId: string): Promise<void> {
-  await apiJson<{ deleted: boolean }>(`/api/chat/conversations/${conversationId}`, {
+  await apiJson<{ deleted: boolean }>(`/chat/conversations/${conversationId}`, {
     method: 'DELETE',
   });
 }

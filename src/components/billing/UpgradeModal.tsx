@@ -96,7 +96,7 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
   return (
     <div
       onClick={handleBackdrop}
-      className="fixed inset-0 z-[1000] bg-black/75 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-1000 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
     >
       <div
         className="bg-[#080e1c] border border-slate-800 rounded-[20px] w-full max-h-[90vh] overflow-y-auto px-7 py-8 relative transition-[max-width] duration-300 ease-in-out"
