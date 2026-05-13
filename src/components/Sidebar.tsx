@@ -102,7 +102,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = true, onClos
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
               <img
-                src="https://zeroinfinitytechnologies.com/images/logo-1771865164119.webp?t=1777117488383"
+                src="./images/logo.png"
                 alt="Logo"
                 className="h-7 w-7 rounded-lg"
               />
@@ -165,7 +165,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = true, onClos
           </button>
 
           <Link
-            to="/billing"
+            to="/billingDashboard"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200"
           >
             <CreditCard size={17} />
