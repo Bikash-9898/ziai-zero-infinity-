@@ -7,7 +7,7 @@ import AdminOverview from '@/components/AdminOverview';
 import { useAuth } from '@/context/useAuth';
 import LoginForm from '@/components/LoginForm/LoginForm';
 import AdminBillingView from '@/components/AdminBillingView';
-import { BASE_URL, ADMIN_KEY } from '@/config';
+import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 
 const AdminDashboard = () => {
   const { logout, user }                    = useAuth();
@@ -18,7 +18,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetch(`${BASE_URL}/users`, {
-      headers: { 'X-Admin-Key': ADMIN_KEY },
+      headers: { 'X-Admin-Key': ADMIN_SECRET_KEY },
     })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);

@@ -8,6 +8,7 @@ export interface User {
   plan: string;
   is_active: boolean;
   created_at: string; // ISO timestamp string
+  role?: string;
 }
 
 export type View = 'overview' | 'users' | 'api-keys' | 'settings';

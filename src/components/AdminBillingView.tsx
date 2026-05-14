@@ -1,6 +1,6 @@
 // src/components/AdminBillingView.tsx
 import { useState, useEffect } from 'react';
-import { BASE_URL, ADMIN_KEY } from '@/config';
+import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 
 // const API = 'http://localhost:8000';
 // const ADMIN_KEY = 'supersecretadminkey';
@@ -76,7 +76,7 @@ export default function AdminBillingView() {
 
   useEffect(() => {
     fetch(`${BASE_URL}/admin/billing/stats`, {
-      headers: { 'X-Admin-Key': ADMIN_KEY },
+      headers: { 'X-Admin-Key': ADMIN_SECRET_KEY },
     })
       .then(r => r.ok ? r.json() : Promise.reject(r.statusText))
       .then(setStats)

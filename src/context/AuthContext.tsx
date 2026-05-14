@@ -3,13 +3,15 @@ import { useState, useCallback, type ReactNode } from 'react';
 import { AuthContext } from './context';
 import { authApi, tokenStore } from '@/api/auth';
 import type { User } from '@/types/types';
+import { ADMIN_USER_KEY, USER_KEY } from '@/config';
 
-const USER_KEY = 'zi_user';
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     try {
-      const saved = localStorage.getItem(USER_KEY);
+      const saved = localStorage.getItem(USER_KEY)
+                    ?? localStorage.getItem(ADMIN_USER_KEY);
       return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(ADMIN_USER_KEY);
     tokenStore.clear();           // ← clear JWT on logout
   }, []);
 

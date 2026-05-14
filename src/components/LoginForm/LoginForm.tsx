@@ -2,9 +2,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, LogIn, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/useAuth';
-import { BASE_URL } from '@/config';
-
-const ADMIN_USER_KEY = 'zi_admin_user';   // separate from client 'zi_user'
+import { ADMIN_USER_KEY, BASE_URL } from '@/config';
 
 export default function LoginForm() {
   const { setUser }                           = useAuth();
@@ -23,7 +21,7 @@ export default function LoginForm() {
     setError('');
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/admin/login`, {
+      const response = await fetch(`${BASE_URL}/auth/admin/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ loginusername, password }),
@@ -34,6 +32,7 @@ export default function LoginForm() {
         const adminUser = { ...data.user, role: 'admin' };
         setUser(adminUser);
         localStorage.setItem(ADMIN_USER_KEY, JSON.stringify(adminUser));
+        console.log('Saved to localStorage:', localStorage.getItem(ADMIN_USER_KEY));
       } else {
         setError(data.message || 'Invalid credentials.');
       }
