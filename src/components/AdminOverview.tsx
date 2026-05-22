@@ -49,7 +49,7 @@ export default function AdminOverview() {
       
       <StatCard 
         title="New Users" 
-        value={`+${stats.new_cmsusers}`} 
+        value={`+${stats.new_users}`} 
         icon={<Users size={24} />} 
       />
     </div>
