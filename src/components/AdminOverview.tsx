@@ -42,15 +42,23 @@ export default function AdminOverview() {
       
       <StatCard 
         title="Total Tokens" 
-        value={`${(stats.total_tokens / 1000000).toFixed(1)}M`} 
+        // value={`${(stats.total_tokens / 1000000).toFixed(1)}M`} 
+        value={formatTokens(stats.total_tokens)}   // smart unit
         icon={<Database size={24} />} 
       />
       
       <StatCard 
         title="New Users" 
-        value={`+${stats.new_users}`} 
+        value={`+${stats.new_cmsusers}`} 
         icon={<Users size={24} />} 
       />
     </div>
   );
+}
+
+function formatTokens(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
+  if (n >= 1_000_000)     return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)         return `${(n / 1_000).toFixed(1)}K`;
+  return `${n}`;
 }
