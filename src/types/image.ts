@@ -22,13 +22,26 @@ export interface GeneratedImage {
   model: string;
   created_at: string;
   generation_time_ms?: number;
+  sessionId?: string;   
 }
 
 export interface ImageStore {
-  status: ImageStatus;
-  currentImage: string | null;
-  history: GeneratedImage[];
-  error: string | null;
-  generate: (opts: GenerationOptions) => Promise<void>;
-  setHistory: (h: GeneratedImage[]) => void;
+  status:        ImageStatus;
+  currentImage:  string | null;
+  history:       GeneratedImage[];
+  error:         string | null;
+  generate:      (opts: GenerationOptions) => Promise<void>;
+  setHistory:    (h: GeneratedImage[]) => void;
+  deleteImage:   (id: string) => void;               // removes one image from history
+  activeSessionId: string | null;                    // currently viewed session
+  setActiveSessionId: (id: string | null) => void;
 }
+
+// export interface ImageStore {
+//   status: ImageStatus;
+//   currentImage: string | null;
+//   history: GeneratedImage[];
+//   error: string | null;
+//   generate: (opts: GenerationOptions) => Promise<void>;
+//   setHistory: (h: GeneratedImage[]) => void;
+// }

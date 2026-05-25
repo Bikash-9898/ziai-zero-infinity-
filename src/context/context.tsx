@@ -7,6 +7,7 @@ export interface AuthContextType {
   login: (googleToken: string) => Promise<void>;
   logout: () => void;
   setUser: (user: User | null) => void; 
+  refreshUser: () => Promise<void>; // new method to refresh user data
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

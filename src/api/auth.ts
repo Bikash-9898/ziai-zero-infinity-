@@ -27,4 +27,15 @@ export const authApi = {
     }
     return data;
   },
+
+  // Fetch current user from backend — used to refresh plan/profile after changes
+  async getMe() {
+    const token = tokenStore.get();
+    if (!token) throw new Error('No token');
+    const res = await fetch(`${BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch user');
+    return res.json(); // expects { user: User }
+  },
 };

@@ -1,3 +1,4 @@
+// image history component
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import type { GeneratedImage } from '@/types/image';

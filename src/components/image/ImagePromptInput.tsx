@@ -24,6 +24,7 @@ export default function ImagePromptInput() {
   const [models, setModels]             = useState<ImageModel[]>([]);
 
   const isGenerating    = status === 'generating';
+  // Dynamic credits from whichever model is selected — falls back to 1.0
   const selectedCredits = models.find(m => m.id === model)?.credits_per_image ?? 1.0;
 
   function toggleTag(tag: string) {
@@ -47,6 +48,7 @@ export default function ImagePromptInput() {
         width:          ratio.w,
         height:         ratio.h,
       });
+      // Prompt intentionally NOT cleared — lets user tweak and re-generate
     } catch (err) {
       console.error('generate error:', err);
     }
@@ -56,15 +58,17 @@ export default function ImagePromptInput() {
     <div className="shrink-0 border-b border-white/5 p-4">
       <div className="max-w-4xl mx-auto bg-white/5 border border-white/10 rounded-2xl p-4">
 
+        {/* Main prompt textarea — at top */}
         <textarea
           rows={3}
           value={prompt}
           onChange={e => setPrompt(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleGenerate(); } }}
           placeholder="Describe your image… e.g. 'A cyberpunk city at dusk, neon reflections on wet streets, cinematic'"
           className="w-full bg-transparent text-slate-200 text-sm font-mono resize-none outline-none placeholder-slate-700 leading-relaxed"
         />
 
-        {/* Style tags */}
+        {/* Style tags — multi-select */}
         <div className="flex flex-wrap gap-2 mt-3">
           <span className="text-[9px] uppercase tracking-widest text-slate-600 self-center mr-1">Style</span>
           {STYLE_TAGS.map(tag => (
@@ -82,8 +86,8 @@ export default function ImagePromptInput() {
           ))}
         </div>
 
-        {/* Controls */}
-        <div className="grid grid-cols-3 gap-3 mt-4 overflow-visible">
+        {/* Controls — 3-column grid */}
+        <div className="grid grid-cols-3 gap-3 mt-4">
           <div>
             <p className="text-[9px] uppercase tracking-widest text-slate-600 mb-1.5">Model</p>
             <ImageModelSelector
@@ -127,6 +131,7 @@ export default function ImagePromptInput() {
           </div>
         </div>
 
+        {/* Negative prompt textarea */}
         {showNeg && (
           <textarea
             rows={1}
@@ -137,12 +142,13 @@ export default function ImagePromptInput() {
           />
         )}
 
+        {/* Footer row — dynamic credits + generate button */}
         <div className="flex items-center justify-between mt-4">
           <span className="text-[10px] font-mono text-slate-700">
             {selectedCredits} credit per generation
           </span>
           <button
-            onClick={handleGenerate}
+            onClick={() => void handleGenerate()}
             disabled={isGenerating || !prompt.trim()}
             className="flex items-center gap-2 bg-linear-to-r from-purple-600 to-blue-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all"
           >

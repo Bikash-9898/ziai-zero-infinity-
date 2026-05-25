@@ -1,3 +1,4 @@
+// ImageSidebarHistory.tsx
 import { ImageIcon } from 'lucide-react';
 import { useImageStore } from '@/store/useImageStore';
 
