@@ -4,6 +4,7 @@ import { X, Loader2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { usePlanUpgrade } from '@/hooks/usePlanUpgrade';
 import { type PlanComparison } from '@/api/billing';
 import PlanCard from './PlanCard';
+import KhaltiButton from '../payment/Khaltibutton';
 
 interface UpgradeModalProps {
   userId:       string;
@@ -83,6 +84,7 @@ export default function UpgradeModal({ userId, onClose, onPlanChanged }: Upgrade
         {step === 'payment' && selected && (
           <PaymentStep
             selected={selected}
+            userId={userId}
             error={error}
             actionLoading={actionLoading}
             onPay={initiatePayment}
@@ -135,8 +137,9 @@ function PlanGrid({ plans, loading, error, onSelect }: {
   );
 }
 
-function PaymentStep({ selected, error, actionLoading, onPay }: {
+function PaymentStep({ selected, userId, error, actionLoading, onPay }: {
   selected: PlanComparison;
+  userId: string;
   error: string | null;
   actionLoading: boolean;
   onPay: () => void;
@@ -165,24 +168,28 @@ function PaymentStep({ selected, error, actionLoading, onPay }: {
 
       {error && <p className="text-red-500 text-[13px]">{error}</p>}
 
-      <button
-        onClick={onPay}
-        disabled={actionLoading}
-        className="w-full py-3.5 rounded-xl bg-[#60BB46] border-none cursor-pointer flex items-center justify-center gap-2.5 font-bold text-[15px] text-white transition-opacity duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
-      >
-        {actionLoading ? (
-          <Loader2 size={18} className="animate-spin" />
-        ) : (
-          <>
-            <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-5 brightness-0 invert" onError={e => (e.currentTarget.style.display = 'none')} />
-            Pay with eSewa
-          </>
-        )}
-      </button>
+      <div className="flex flex-col gap-3">
+        <button
+          onClick={onPay}
+          disabled={actionLoading}
+          className="w-full py-3.5 rounded-xl bg-[#60BB46] border-none cursor-pointer flex items-center justify-center gap-2.5 font-bold text-[15px] text-white transition-opacity duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          {actionLoading ? (
+            <Loader2 size={18} className="animate-spin" />
+          ) : (
+            <>
+              <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-5 brightness-0 invert" onError={e => (e.currentTarget.style.display = 'none')} />
+              Pay with eSewa
+            </>
+          )}
+        </button>
+
+        <KhaltiButton plan={selected.plan} userId={userId} />
+      </div>
 
       <div className="flex items-center justify-center gap-1.5 text-slate-700 text-xs">
         <ShieldCheck size={14} />
-        Secured &amp; verified by eSewa Payment Gateway
+        Secured &amp; verified by eSewa and Khalti payment gateways
       </div>
     </div>
   );

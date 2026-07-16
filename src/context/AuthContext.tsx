@@ -5,8 +5,6 @@ import { authApi, tokenStore } from '@/api/auth';
 import type { User } from '@/types/types';
 import { ADMIN_USER_KEY, USER_KEY } from '@/config';
 
-
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     try {

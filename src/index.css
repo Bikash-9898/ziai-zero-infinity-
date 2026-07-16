@@ -3,3 +3,54 @@
 /* @tailwind base;
 @tailwind components; */
 /* @tailwind utilities; */
+
+.code-block {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+  box-sizing: border-box;
+  border-radius: 12px;
+  position: relative;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(15, 23, 42, 0.9);
+}
+
+.code-block pre {
+  margin: 0;
+  white-space: pre;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.code-block code {
+  display: block;
+  min-width: max-content;
+  white-space: pre;
+}
+
+.message-content {
+  width: 100%;
+  overflow: hidden;
+}
+
+.chat-message {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.code-block::-webkit-scrollbar {
+  height: 8px;
+}
+
+.code-block::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.32);
+  border-radius: 9999px;
+}
+
+.code-block::-webkit-scrollbar-track {
+  background: transparent;
+}
