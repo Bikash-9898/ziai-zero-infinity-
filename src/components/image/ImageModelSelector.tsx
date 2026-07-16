@@ -57,7 +57,7 @@ export default function ImageModelSelector({ value, onChange, onModelsLoaded }: 
 
       {/* Dropdown — fixed max-height with proper scroll */}
       {open && !loading && (
-        <div className="absolute top-full left-0 mt-1.5 w-full max-h-48 overflow-y-auto bg-[#2a2a2a] border border-white/10 rounded-xl z-50 shadow-xl shadow-black/60">
+        <div className="absolute top-full left-0 mt-1.5 w-full max-h-20 overflow-y-auto bg-[#2a2a2a] border border-white/10 rounded-xl z-50 shadow-xl shadow-black/60 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-purple-500/30 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-purple-500/60">
           {models.map(model => (
             <button
               key={model.id}

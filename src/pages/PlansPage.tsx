@@ -99,6 +99,7 @@ import { useAuth } from '@/context/useAuth';
 import { useBillingStatus } from '@/hooks/useUsage';
 import { usePlanUpgrade } from '@/hooks/usePlanUpgrade';
 import PlanCard from '@/components/billing/PlanCard';
+import KhaltiButton from '@/components/payment/Khaltibutton';
 import { ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -237,24 +238,28 @@ export default function PlansPage() {
 
             {error && <p className="text-red-500 text-[13px]">{error}</p>}
 
-            <button
-              onClick={initiatePayment}
-              disabled={actionLoading}
-              className="w-full py-3.5 rounded-xl bg-[#60BB46] border-none cursor-pointer flex items-center justify-center gap-2.5 font-bold text-[15px] text-white transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {actionLoading ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <>
-                  <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-5 brightness-0 invert" onError={e => (e.currentTarget.style.display = 'none')} />
-                  Pay with eSewa
-                </>
-              )}
-            </button>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={initiatePayment}
+                disabled={actionLoading}
+                className="w-full py-3.5 rounded-xl bg-[#60BB46] border-none cursor-pointer flex items-center justify-center gap-2.5 font-bold text-[15px] text-white transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {actionLoading ? (
+                  <Loader2 size={18} className="animate-spin" />
+                ) : (
+                  <>
+                    <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-5 brightness-0 invert" onError={e => (e.currentTarget.style.display = 'none')} />
+                    Pay with eSewa
+                  </>
+                )}
+              </button>
+
+              <KhaltiButton plan={selected.plan} userId={userId} />
+            </div>
 
             <div className="flex items-center justify-center gap-1.5 text-slate-700 text-xs">
               <ShieldCheck size={14} />
-              Secured &amp; verified by eSewa Payment Gateway
+              Secured &amp; verified by eSewa and Khalti payment gateways
             </div>
           </div>
         )}
