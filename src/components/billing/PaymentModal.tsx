@@ -13,14 +13,14 @@
 
 import { useState } from "react";
 import EsewaButton from "../payment/EsewaButton";
-// import KhaltiButton from "../payment/KhaltiButton";
+import KhaltiButton from "../payment/Khaltibutton";
 
 interface PaymentModalProps {
   plan:     string;
   priceNPR: number;
   userId:   string;
   onClose:  () => void;
-}
+} 
 
 export default function PaymentModal({
   plan,
@@ -115,10 +115,9 @@ export default function PaymentModal({
           {selectedProvider === "esewa" && (
             <EsewaButton plan={plan} userId={userId} />
           )}
-          {/* Uncomment when Khalti is integrated:
           {selectedProvider === "khalti" && (
             <KhaltiButton plan={plan} userId={userId} />
-          )} */}
+          )}
         </div>
 
         {/* Footer */}

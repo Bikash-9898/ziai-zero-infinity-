@@ -1,7 +1,7 @@
 // src/pages/AdminDashboard.tsx
 import { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, LogOut, PanelRight, X, CreditCard, LayoutDashboardIcon } from 'lucide-react';
-import type { User } from '@/types/types';
+import type { AdminUserRow } from '@/types/types';
 import UserTable from '@/components/UserTable';
 import AdminOverview from '@/components/AdminOverview';
 import { useAuth } from '@/context/useAuth';
@@ -12,20 +12,32 @@ import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 const AdminDashboard = () => {
   const { logout, user }                    = useAuth();
   const [activeView, setActiveView]         = useState<string>('overview');
-  const [users, setUsers]                   = useState<User[]>([]);
+  const [users, setUsers]                   = useState<AdminUserRow[]>([]);
   const [loading, setLoading]               = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [quota, setQuota] = useState<{ used: number; max: number }>({ used: 0, max: 10_000_000 });
 
   useEffect(() => {
-    fetch(`${BASE_URL}/users`, {
+    // /admin/users returns each user enriched with token usage, cost,
+    // trial tokens remaining, and wallet balance — powers the Users tab.
+    fetch(`${BASE_URL}/admin/users`, {
       headers: { 'X-Admin-Key': ADMIN_SECRET_KEY },
     })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data: User[]) => { setUsers(data); setLoading(false); })
+      .then((data: AdminUserRow[]) => { setUsers(data); setLoading(false); })
       .catch((err) => { console.error('Error fetching users:', err); setLoading(false); });
+
+    fetch(`${BASE_URL}/admin/stats`, {
+      headers: { 'X-Admin-Key': ADMIN_SECRET_KEY },
+    })
+      .then((res) => res.ok ? res.json() : Promise.reject(res.statusText))
+      .then((data: { quota_used: number; quota_max: number }) => {
+        setQuota({ used: data.quota_used, max: data.quota_max });
+      })
+      .catch((err) => console.error('Error fetching quota stats:', err));
   }, []);
 
   // Auth guard — shows login form if no user in context
@@ -145,9 +157,14 @@ const AdminDashboard = () => {
                 Global Token Usage
               </h3>
               <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-500 w-[65%]" />
+                <div
+                  className="h-full bg-indigo-500"
+                  style={{ width: `${Math.min(100, Math.round((quota.used / (quota.max || 1)) * 100))}%` }}
+                />
               </div>
-              <p className="mt-2 text-[10px] text-slate-500">6.5M / 10M monthly quota used</p>
+              <p className="mt-2 text-[10px] text-slate-500">
+                {formatQuota(quota.used)} / {formatQuota(quota.max)} monthly quota used
+              </p>
             </section>
           </aside>
         </div>
@@ -164,6 +181,12 @@ const AdminDashboard = () => {
     </div>
   );
 };
+
+function formatQuota(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000)     return `${(n / 1_000).toFixed(1)}K`;
+  return `${n}`;
+}
 
 type NavItemProps = { icon: React.ReactNode; label: string; active: boolean; onClick: () => void };
 

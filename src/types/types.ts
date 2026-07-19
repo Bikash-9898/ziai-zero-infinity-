@@ -11,6 +11,45 @@ export interface User {
   role?: string;
 }
 
+// Returned by GET /api/admin/users — User + aggregate usage/wallet info
+export interface AdminUserRow {
+  id: string;
+  email: string;
+  username: string;
+  plan: string;
+  is_active: boolean;
+  created_at: string;
+  trial_tokens_remaining: number;
+  credit_balance_npr: number;
+  total_tokens: number;
+  total_cost_usd: number;
+  total_requests: number;
+}
+
+export interface TokenAnalyticsPoint {
+  date: string;
+  tokens: number;
+  requests: number;
+}
+
+export interface TokenAnalyticsResponse {
+  daily: TokenAnalyticsPoint[];
+}
+
+export interface ProfitAnalyticsPoint {
+  date: string;
+  revenue_npr: number;
+  cost_npr: number;
+  profit_npr: number;
+}
+
+export interface ProfitAnalyticsResponse {
+  daily: ProfitAnalyticsPoint[];
+  total_revenue_npr: number;
+  total_cost_npr: number;
+  total_profit_npr: number;
+}
+
 export type View = 'overview' | 'users' | 'api-keys' | 'settings';
 
 export interface sensitiveData {

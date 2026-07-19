@@ -136,6 +136,23 @@ export const cancelSubscription = (
 export const initiateEsewa = (plan: string, userId: string): Promise<EsewaPayloadResponse> =>
   apiJson(`/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: 'POST' });
 
+export interface KhaltiInitiateResponse {
+  payment_url: string;
+  pidx: string;
+  order_id: string;
+}
+
+export const initiateKhalti = (plan: string, userId: string): Promise<KhaltiInitiateResponse> =>
+  apiJson(`/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: 'POST' });
+
+interface KhaltiVerifyPayload {
+  pidx: string;
+  order_id: string;
+}
+
+export const verifyKhalti = (payload: KhaltiVerifyPayload): Promise<{ verified: boolean; detail?: string }> =>
+  apiJson(`/billing/khalti/verify`, { method: 'POST', body: JSON.stringify(payload) });
+
 // ── Usage ─────────────────────────────────────────────────────────────────────
 
 export const getUsage = (userId: string): Promise<UsageResponse> =>
