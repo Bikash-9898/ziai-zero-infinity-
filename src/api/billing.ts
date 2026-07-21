@@ -104,6 +104,11 @@ export interface EsewaPayloadResponse {
   transaction_uuid: string;
 }
 
+export interface StripeCheckoutSessionResponse {
+  id: string;
+  url?: string;
+}
+
 // ── Plans ─────────────────────────────────────────────────────────────────────
 
 export const getPlans       = (): Promise<PlanInfo[]>        => apiJson('/plans/');
@@ -152,6 +157,13 @@ interface KhaltiVerifyPayload {
 
 export const verifyKhalti = (payload: KhaltiVerifyPayload): Promise<{ verified: boolean; detail?: string }> =>
   apiJson(`/billing/khalti/verify`, { method: 'POST', body: JSON.stringify(payload) });
+
+export const createStripeCheckoutSession = (
+  plan: string,
+  userId: string,
+): Promise<StripeCheckoutSessionResponse> =>
+  apiJson(`/billing/stripe/initiate?plan=${plan}&user_id=${userId}`, { method: 'POST' });
+
 
 // ── Usage ─────────────────────────────────────────────────────────────────────
 
