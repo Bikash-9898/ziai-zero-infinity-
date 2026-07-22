@@ -10,6 +10,7 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
 
   const navitems = [
     { name: 'Home', path : '/' },
+    { name: 'Chat', path: '/client/chat'},
     { name: 'Services', path: '/services'},
     { name: 'Contact', path: '/contact' }
   ]
@@ -83,20 +84,17 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
 export default function Dashboard() {
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [chatPrompt, setChatPrompt] = useState('');
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleChatSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmedPrompt = chatPrompt.trim();
     if (!trimmedPrompt) return;
-    if (!user) {
-      setIsSignInOpen(true);
-      return;
-    }
+    // No sign-in required — GuestGate on /client/chat auto-provisions a
+    // guest session (small trial, admin-restricted model) if needed.
     sessionStorage.setItem('zi_pending_prompt', trimmedPrompt);
     setChatPrompt('');
-    navigate('/client');
+    navigate('/client/chat');
   };
 
   return (

@@ -8,6 +8,7 @@ import ImagePage from './pages/ImagePage';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
+import GuestGate from './components/GuestGate';
 
 import Dashboard from './pages/BillingDashboard';
 import BillingPage from './pages/BillingPage';
@@ -31,16 +32,24 @@ const App = () => {
       <Route path="/" element={<Home />} />
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-  
-      <Route element={<ProtectedLayout />}>
-        {/* ClientDashboard is the shell — nested routes render via <Outlet /> */}
-        <Route path="/client" element={<ClientDashboard />}>
-          {/* Default redirect: /client → /client/chat */}
-          <Route index element={<Navigate to="chat" replace />} />
-          <Route path="chat"     element={<ChatPage />} />
+
+      {/* ClientDashboard is the shell — nested routes render via <Outlet /> */}
+      <Route path="/client" element={<ClientDashboard />}>
+        {/* Default redirect: /client → /client/chat */}
+        <Route index element={<Navigate to="chat" replace />} />
+
+        {/* Chat works without sign-in — GuestGate auto-provisions a guest
+            session (small trial, admin-restricted model) if nobody's logged in. */}
+        <Route path="chat" element={<GuestGate><ChatPage /></GuestGate>} />
+
+        {/* Everything else under /client still requires a real account */}
+        <Route element={<ProtectedLayout />}>
           <Route path="image"    element={<ImagePage />} />
           <Route path="settings" element={<ClientSettings />} />
         </Route>
+      </Route>
+
+      <Route element={<ProtectedLayout />}>
         <Route path="/billing" element={<BillingPage />} />
         <Route path="/billingDashboard" element={<Dashboard />} />
         <Route path="/usage" element={<UsageStats />} />

@@ -47,7 +47,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   // ── Derived user info ──────────────────────────────────────────────────────
   const displayName  = user?.username || 'Guest';
-  const displayEmail = user?.email    || 'Not signed in';
+  const displayEmail = user?.is_guest ? 'Sign in to save your chats' : (user?.email || 'Not signed in');
   const userInitial  = displayName.trim().charAt(0).toUpperCase() || 'U';
   const planLabel    = user?.plan ?? 'Free';
   const planColor    = PLAN_COLORS[user?.plan ?? 'free'] ?? '#64748b';

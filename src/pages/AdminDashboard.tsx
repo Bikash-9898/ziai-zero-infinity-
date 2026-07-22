@@ -1,12 +1,13 @@
 // src/pages/AdminDashboard.tsx
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, LogOut, PanelRight, X, CreditCard, LayoutDashboardIcon } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, PanelRight, X, CreditCard, LayoutDashboardIcon, Settings } from 'lucide-react';
 import type { AdminUserRow } from '@/types/types';
 import UserTable from '@/components/UserTable';
 import AdminOverview from '@/components/AdminOverview';
 import { useAuth } from '@/context/useAuth';
 import LoginForm from '@/components/LoginForm/LoginForm';
 import AdminBillingView from '@/components/AdminBillingView';
+import AdminGuestModelSettings from '@/components/AdminGuestModelSettings';
 import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 
 const AdminDashboard = () => {
@@ -78,6 +79,7 @@ const AdminDashboard = () => {
           <NavItem icon={<LayoutDashboard size={20} />} label="Overview" active={activeView === 'overview'} onClick={() => setActiveView('overview')} />
           <NavItem icon={<Users size={20} />}           label="Users"    active={activeView === 'users'}    onClick={() => setActiveView('users')} />
           <NavItem icon={<CreditCard size={20} />}      label="Billing"  active={activeView === 'billing'}  onClick={() => setActiveView('billing')} />
+          <NavItem icon={<Settings size={20} />}        label="Settings" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
         </nav>
         <div className="p-4 border-t border-slate-800">
           <button
@@ -116,6 +118,7 @@ const AdminDashboard = () => {
             {activeView === 'users'    && <UserTable users={users} />}
             {activeView === 'overview' && <AdminOverview />}
             {activeView === 'billing'  && <AdminBillingView />}
+            {activeView === 'settings' && <AdminGuestModelSettings />}
           </div>
 
           <div
@@ -175,6 +178,7 @@ const AdminDashboard = () => {
         <MobileNavItem icon={<LayoutDashboard size={20} />} label="Overview" active={activeView === 'overview'} onClick={() => setActiveView('overview')} />
         <MobileNavItem icon={<Users size={20} />}           label="Users"    active={activeView === 'users'}    onClick={() => setActiveView('users')} />
         <MobileNavItem icon={<CreditCard size={20} />}      label="Billing"  active={activeView === 'billing'}  onClick={() => setActiveView('billing')} />
+        <MobileNavItem icon={<Settings size={20} />}        label="Settings" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
         {/* navigate('/') removed — auth guard re-shows login form automatically */}
         <MobileNavItem icon={<LogOut size={20} />}          label="Logout"   active={false}                     onClick={logout} />
       </nav>

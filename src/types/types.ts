@@ -9,6 +9,7 @@ export interface User {
   is_active: boolean;
   created_at: string; // ISO timestamp string
   role?: string;
+  is_guest?: boolean;
 }
 
 // Returned by GET /api/admin/users — User + aggregate usage/wallet info

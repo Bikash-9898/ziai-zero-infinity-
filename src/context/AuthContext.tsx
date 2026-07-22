@@ -36,6 +36,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Auto-provision (or resume) a guest session — no sign-in required.
+  // client_guest_id is stable per browser via localStorage, so reloading
+  // the page or coming back later resumes the same guest identity/trial
+  // instead of minting a brand new one each time.
+  const loginAsGuest = useCallback(async () => {
+    setLoading(true);
+    try {
+      let guestId = localStorage.getItem('zi_guest_id');
+      if (!guestId) {
+        guestId = crypto.randomUUID();
+        localStorage.setItem('zi_guest_id', guestId);
+      }
+      const data = await authApi.guestLogin(guestId);
+      if (data.verified) {
+        setUser(data.user);
+        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      }
+    } catch (error) {
+      console.error('Guest login failed:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem(USER_KEY);
@@ -77,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
   
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, setUser , refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginAsGuest, logout, setUser , refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
