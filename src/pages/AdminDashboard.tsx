@@ -8,6 +8,7 @@ import { useAuth } from '@/context/useAuth';
 import LoginForm from '@/components/LoginForm/LoginForm';
 import AdminBillingView from '@/components/AdminBillingView';
 import AdminGuestModelSettings from '@/components/AdminGuestModelSettings';
+import AdminModelRegistry from '@/components/AdminModelRegistry';
 import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 
 const AdminDashboard = () => {
@@ -118,7 +119,12 @@ const AdminDashboard = () => {
             {activeView === 'users'    && <UserTable users={users} />}
             {activeView === 'overview' && <AdminOverview />}
             {activeView === 'billing'  && <AdminBillingView />}
-            {activeView === 'settings' && <AdminGuestModelSettings />}
+            {activeView === 'settings' && (
+              <div className="flex flex-col gap-6">
+                <AdminModelRegistry />
+                <AdminGuestModelSettings />
+              </div>
+            )}
           </div>
 
           <div

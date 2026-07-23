@@ -51,6 +51,18 @@ export interface ProfitAnalyticsResponse {
   total_profit_npr: number;
 }
 
+// Returned by GET/POST/PUT /api/admin/models — the model registry
+export interface AIModelRow {
+  id: string;
+  label: string;
+  provider: string;                 // 'huggingface' | 'openai' | 'anthropic'
+  provider_model_id: string;
+  input_price_per_million: number;
+  output_price_per_million: number;
+  is_active: boolean;
+  sort_order: number;
+}
+
 export type View = 'overview' | 'users' | 'api-keys' | 'settings';
 
 export interface sensitiveData {
