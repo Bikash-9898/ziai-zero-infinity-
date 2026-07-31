@@ -51,7 +51,16 @@ export interface ProfitAnalyticsResponse {
   total_profit_npr: number;
 }
 
-// Returned by GET/POST/PUT /api/admin/models — the model registry
+// Returned by GET/POST/PUT /api/admin/image-models — the image model registry
+export interface ImageModelRow {
+  id: string;
+  display_name: string;
+  provider: string;               // 'huggingface' | 'fal' | 'pollinations'
+  provider_model_id: string;
+  credits_per_image: number;
+  is_active: boolean;
+  sort_order: number;
+}
 export interface AIModelRow {
   id: string;
   label: string;
@@ -61,6 +70,7 @@ export interface AIModelRow {
   output_price_per_million: number;
   is_active: boolean;
   sort_order: number;
+  tier: 'fast' | 'balanced' | 'flagship';
 }
 
 export type View = 'overview' | 'users' | 'api-keys' | 'settings';

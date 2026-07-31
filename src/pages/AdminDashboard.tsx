@@ -9,6 +9,8 @@ import LoginForm from '@/components/LoginForm/LoginForm';
 import AdminBillingView from '@/components/AdminBillingView';
 import AdminGuestModelSettings from '@/components/AdminGuestModelSettings';
 import AdminModelRegistry from '@/components/AdminModelRegistry';
+import AdminImageModelRegistry from '@/components/AdminImageModelRegistry';
+import AdminPricingSettings from '@/components/AdminPricingSettings';
 import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 
 const AdminDashboard = () => {
@@ -121,7 +123,9 @@ const AdminDashboard = () => {
             {activeView === 'billing'  && <AdminBillingView />}
             {activeView === 'settings' && (
               <div className="flex flex-col gap-6">
+                <AdminPricingSettings />
                 <AdminModelRegistry />
+                <AdminImageModelRegistry />
                 <AdminGuestModelSettings />
               </div>
             )}

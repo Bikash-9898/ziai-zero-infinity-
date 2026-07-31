@@ -1,22 +1,19 @@
-// src/components/AdminModelRegistry.tsx
+// src/components/AdminImageModelRegistry.tsx
 import { useEffect, useState } from 'react';
 import { Plus, Trash2, Save, Loader2 } from 'lucide-react';
 import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
-import type { AIModelRow } from '@/types/types';
+import type { ImageModelRow } from '@/types/types';
 
-const PROVIDERS = ['huggingface', 'openai', 'anthropic'];
-const TIERS: AIModelRow['tier'][] = ['fast', 'balanced', 'flagship'];
+const PROVIDERS = ['huggingface', 'fal', 'pollinations'];
 
-const EMPTY_FORM: AIModelRow = {
+const EMPTY_FORM: ImageModelRow = {
   id: '',
-  label: '',
+  display_name: '',
   provider: 'huggingface',
   provider_model_id: '',
-  input_price_per_million: 0,
-  output_price_per_million: 0,
+  credits_per_image: 1.0,
   is_active: true,
   sort_order: 0,
-  tier: 'balanced',
 };
 
 async function apiCall(path: string, options: RequestInit = {}) {
@@ -35,20 +32,20 @@ async function apiCall(path: string, options: RequestInit = {}) {
   return res.json();
 }
 
-export default function AdminModelRegistry() {
-  const [models, setModels]     = useState<AIModelRow[]>([]);
+export default function AdminImageModelRegistry() {
+  const [models, setModels]     = useState<ImageModelRow[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm]         = useState<AIModelRow>(EMPTY_FORM);
+  const [form, setForm]         = useState<ImageModelRow>(EMPTY_FORM);
   const [saving, setSaving]     = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
-    apiCall('/models')
-      .then((data: AIModelRow[]) => setModels(data))
-      .catch(() => setError('Failed to load models'))
+    apiCall('/image-models')
+      .then((data: ImageModelRow[]) => setModels(data))
+      .catch(() => setError('Failed to load image models'))
       .finally(() => setLoading(false));
   };
 
@@ -60,7 +57,7 @@ export default function AdminModelRegistry() {
     setShowForm(true);
   };
 
-  const startEdit = (model: AIModelRow) => {
+  const startEdit = (model: ImageModelRow) => {
     setForm(model);
     setEditingId(model.id);
     setShowForm(true);
@@ -71,21 +68,19 @@ export default function AdminModelRegistry() {
     setError(null);
     try {
       if (editingId) {
-        await apiCall(`/models/${editingId}`, {
+        await apiCall(`/image-models/${editingId}`, {
           method: 'PUT',
           body: JSON.stringify({
-            label: form.label,
+            display_name: form.display_name,
             provider: form.provider,
             provider_model_id: form.provider_model_id,
-            input_price_per_million: form.input_price_per_million,
-            output_price_per_million: form.output_price_per_million,
+            credits_per_image: form.credits_per_image,
             is_active: form.is_active,
             sort_order: form.sort_order,
-            tier: form.tier,
           }),
         });
       } else {
-        await apiCall('/models', { method: 'POST', body: JSON.stringify(form) });
+        await apiCall('/image-models', { method: 'POST', body: JSON.stringify(form) });
       }
       setShowForm(false);
       load();
@@ -96,9 +91,9 @@ export default function AdminModelRegistry() {
     }
   };
 
-  const toggleActive = async (model: AIModelRow) => {
+  const toggleActive = async (model: ImageModelRow) => {
     try {
-      await apiCall(`/models/${model.id}`, {
+      await apiCall(`/image-models/${model.id}`, {
         method: 'PUT',
         body: JSON.stringify({ is_active: !model.is_active }),
       });
@@ -108,13 +103,13 @@ export default function AdminModelRegistry() {
     }
   };
 
-  const remove = async (model: AIModelRow) => {
-    if (!confirm(`Delete model "${model.id}"? This can't be undone.`)) return;
+  const remove = async (model: ImageModelRow) => {
+    if (!confirm(`Delete image model "${model.id}"? This can't be undone.`)) return;
     try {
-      await apiCall(`/models/${model.id}`, { method: 'DELETE' });
+      await apiCall(`/image-models/${model.id}`, { method: 'DELETE' });
       load();
     } catch {
-      setError('Failed to delete — it may still be referenced by past requests');
+      setError('Failed to delete — it may still be referenced by past generations');
     }
   };
 
@@ -124,7 +119,7 @@ export default function AdminModelRegistry() {
     <div className="bg-[#0d1224] border border-slate-800 rounded-2xl px-6 py-5">
       <div className="flex items-center justify-between mb-1">
         <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest m-0">
-          AI Model Registry
+          Image Model Registry
         </p>
         <button
           onClick={startCreate}
@@ -134,7 +129,8 @@ export default function AdminModelRegistry() {
         </button>
       </div>
       <p className="text-xs text-slate-500 mt-2 mb-4">
-        Single source of truth for every model in the app — routing, pricing, and what shows in the chat dropdown all read from here.
+        Same pattern as the chat AI models — routing, credit cost, and what shows in the image
+        generator's dropdown all read from here.
       </p>
 
       {error && (
@@ -150,15 +146,15 @@ export default function AdminModelRegistry() {
               value={form.id}
               disabled={!!editingId}
               onChange={(e) => setForm({ ...form, id: e.target.value })}
-              placeholder="e.g. gpt-4o"
+              placeholder="e.g. sdxl"
               className="input"
             />
           </Field>
-          <Field label="Display Label">
+          <Field label="Display Name">
             <input
-              value={form.label}
-              onChange={(e) => setForm({ ...form, label: e.target.value })}
-              placeholder="e.g. GPT-4o"
+              value={form.display_name}
+              onChange={(e) => setForm({ ...form, display_name: e.target.value })}
+              placeholder="e.g. Stable Diffusion 3.5 Large"
               className="input"
             />
           </Field>
@@ -175,23 +171,15 @@ export default function AdminModelRegistry() {
             <input
               value={form.provider_model_id}
               onChange={(e) => setForm({ ...form, provider_model_id: e.target.value })}
-              placeholder="e.g. gpt-4o"
+              placeholder="e.g. stabilityai/stable-diffusion-3.5-large"
               className="input"
             />
           </Field>
-          <Field label="Input $ / 1M tokens">
+          <Field label="Credits per Image">
             <input
-              type="number" step="0.01"
-              value={form.input_price_per_million}
-              onChange={(e) => setForm({ ...form, input_price_per_million: parseFloat(e.target.value) || 0 })}
-              className="input"
-            />
-          </Field>
-          <Field label="Output $ / 1M tokens">
-            <input
-              type="number" step="0.01"
-              value={form.output_price_per_million}
-              onChange={(e) => setForm({ ...form, output_price_per_million: parseFloat(e.target.value) || 0 })}
+              type="number" step="0.1" min="0"
+              value={form.credits_per_image}
+              onChange={(e) => setForm({ ...form, credits_per_image: parseFloat(e.target.value) || 0 })}
               className="input"
             />
           </Field>
@@ -203,19 +191,10 @@ export default function AdminModelRegistry() {
               className="input"
             />
           </Field>
-          <Field label="Routing Tier">
-            <select
-              value={form.tier}
-              onChange={(e) => setForm({ ...form, tier: e.target.value as AIModelRow['tier'] })}
-              className="input"
-            >
-              {TIERS.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </Field>
-          <div className="flex items-end gap-2">
+          <div className="flex items-end gap-2 col-span-2">
             <button
               onClick={save}
-              disabled={saving || !form.id || !form.label || !form.provider_model_id}
+              disabled={saving || !form.id || !form.display_name || !form.provider_model_id}
               className="flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-xs font-bold transition-all"
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
@@ -232,14 +211,12 @@ export default function AdminModelRegistry() {
       )}
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-180">
+        <table className="w-full text-left border-collapse min-w-[680px]">
           <thead>
             <tr className="text-slate-500 text-[10px] uppercase tracking-widest border-b border-slate-800">
               <th className="py-2 pr-3 font-semibold">Model</th>
               <th className="py-2 pr-3 font-semibold">Provider</th>
-              <th className="py-2 pr-3 font-semibold">Input $/1M</th>
-              <th className="py-2 pr-3 font-semibold">Output $/1M</th>
-              <th className="py-2 pr-3 font-semibold">Tier</th>
+              <th className="py-2 pr-3 font-semibold">Credits / Image</th>
               <th className="py-2 pr-3 font-semibold">Status</th>
               <th className="py-2 pr-3 font-semibold text-right">Actions</th>
             </tr>
@@ -248,21 +225,11 @@ export default function AdminModelRegistry() {
             {models.map((m) => (
               <tr key={m.id} className="text-sm">
                 <td className="py-3 pr-3">
-                  <div className="text-slate-200 font-medium">{m.label}</div>
+                  <div className="text-slate-200 font-medium">{m.display_name}</div>
                   <div className="text-[10px] text-slate-600 font-mono">{m.id}</div>
                 </td>
                 <td className="py-3 pr-3 text-slate-400 text-xs">{m.provider}</td>
-                <td className="py-3 pr-3 text-slate-300 font-mono text-xs">${m.input_price_per_million.toFixed(2)}</td>
-                <td className="py-3 pr-3 text-slate-300 font-mono text-xs">${m.output_price_per_million.toFixed(2)}</td>
-                <td className="py-3 pr-3">
-                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
-                    m.tier === 'flagship' ? 'bg-purple-500/10 text-purple-300' :
-                    m.tier === 'fast'     ? 'bg-emerald-500/10 text-emerald-300' :
-                                             'bg-blue-500/10 text-blue-300'
-                  }`}>
-                    {m.tier}
-                  </span>
-                </td>
+                <td className="py-3 pr-3 text-slate-300 font-mono text-xs">{m.credits_per_image.toFixed(2)}cr</td>
                 <td className="py-3 pr-3">
                   <button
                     onClick={() => toggleActive(m)}
