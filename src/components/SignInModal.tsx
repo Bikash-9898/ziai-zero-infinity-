@@ -14,7 +14,7 @@ export default function SignInModal({ isOpen, onClose }: { isOpen: boolean; onCl
         // We need the ID token — use the credential flow instead
         await login(tokenResponse.access_token);
         onClose();
-        navigate('/client');
+        navigate('/client/chat');
       } catch (error) {
         console.error('Login error:', error);
       }

@@ -102,6 +102,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const handleLogout = () => {
     setAccountMenuOpen(false);
     logout();
+    navigate('/');
+    onClose?.();
   };
 
   // ── Helpers ────────────────────────────────────────────────────────────────

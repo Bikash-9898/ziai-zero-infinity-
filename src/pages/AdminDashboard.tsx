@@ -1,5 +1,6 @@
 // src/pages/AdminDashboard.tsx
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Users, LogOut, PanelRight, X, CreditCard, LayoutDashboardIcon, Settings } from 'lucide-react';
 import type { AdminUserRow } from '@/types/types';
 import UserTable from '@/components/UserTable';
@@ -15,6 +16,7 @@ import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 
 const AdminDashboard = () => {
   const { logout, user }                    = useAuth();
+  const navigate = useNavigate();
   const [activeView, setActiveView]         = useState<string>('overview');
   const [users, setUsers]                   = useState<AdminUserRow[]>([]);
   const [loading, setLoading]               = useState(true);
@@ -70,6 +72,11 @@ const AdminDashboard = () => {
     );
   }
 
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen w-full bg-[#0a0f1e] text-slate-100 font-sans overflow-hidden">
 
@@ -87,7 +94,7 @@ const AdminDashboard = () => {
         <div className="p-4 border-t border-slate-800">
           <button
             className="flex items-center space-x-3 text-slate-400 hover:text-red-400 transition-colors w-full px-4 py-2"
-            onClick={logout}
+            onClick={handleLogout}
           >
             <LogOut size={20} />
             <span>Logout</span>
@@ -189,8 +196,7 @@ const AdminDashboard = () => {
         <MobileNavItem icon={<Users size={20} />}           label="Users"    active={activeView === 'users'}    onClick={() => setActiveView('users')} />
         <MobileNavItem icon={<CreditCard size={20} />}      label="Billing"  active={activeView === 'billing'}  onClick={() => setActiveView('billing')} />
         <MobileNavItem icon={<Settings size={20} />}        label="Settings" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
-        {/* navigate('/') removed — auth guard re-shows login form automatically */}
-        <MobileNavItem icon={<LogOut size={20} />}          label="Logout"   active={false}                     onClick={logout} />
+        <MobileNavItem icon={<LogOut size={20} />}          label="Logout"   active={false}                     onClick={handleLogout} />
       </nav>
     </div>
   );

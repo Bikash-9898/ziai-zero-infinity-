@@ -13,7 +13,7 @@
 
 import { useState } from "react";
 import EsewaButton from "../payment/EsewaButton";
-import KhaltiButton from "../payment/KhaltiButton";
+import KhaltiButton from "../payment/Khaltibutton";
 import StripeButton from "../payment/StripeButton";
 
 interface PaymentModalProps {

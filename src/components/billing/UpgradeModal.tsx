@@ -4,7 +4,7 @@ import { X, Loader2, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { usePlanUpgrade } from '@/hooks/usePlanUpgrade';
 import { type PlanComparison } from '@/api/billing';
 import PlanCard from './PlanCard';
-import KhaltiButton from '../payment/KhaltiButton';
+import KhaltiButton from '../payment/Khaltibutton';
 import StripeButton from '../payment/StripeButton';
 
 interface UpgradeModalProps {

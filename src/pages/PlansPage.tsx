@@ -99,7 +99,7 @@ import { useAuth } from '@/context/useAuth';
 import { useBillingStatus } from '@/hooks/useUsage';
 import { usePlanUpgrade } from '@/hooks/usePlanUpgrade';
 import PlanCard from '@/components/billing/PlanCard';
-import KhaltiButton from '@/components/payment/KhaltiButton'; 
+import KhaltiButton from '@/components/payment/Khaltibutton'; 
 import { ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StripeButton from '@/components/payment/StripeButton';
