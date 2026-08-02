@@ -1,9 +1,10 @@
 // src/pages/BillingPage.tsx
 import { useState } from 'react';
-import { CreditCard, Zap, Clock, ChevronRight, RotateCcw, Loader2 } from 'lucide-react';
-import { useBillingStatus, usePaymentHistory, useUsage } from '@/hooks/useUsage';
+import { CreditCard, Zap, Clock, ChevronRight, RotateCcw, Loader2, Wallet } from 'lucide-react';
+import { useBillingStatus, usePaymentHistory, useUsage, useWallet } from '@/hooks/useUsage';
 import { useAuth } from '@/context/useAuth';
 import UpgradeModal from '@/components/billing/UpgradeModal';
+import WalletTopUpModal from '@/components/billing/WalletTopUpModal';
 import UsageBar from '@/components/billing/UsageBar';
 import { cancelSubscription } from '@/api/billing';
 
@@ -27,6 +28,13 @@ export default function BillingPage() {
   const { status, refetch: refetchStatus } = useBillingStatus(skip ? null : userId);
   const { usage, loading: usageLoading }   = useUsage(skip ? null : userId);
   const { payments, loading: payLoading }  = usePaymentHistory(skip ? null : userId);
+  const { wallet, loading: walletLoading, refetch: refetchWallet } = useWallet(skip ? null : userId);
+  const [showTopUp, setShowTopUp] = useState(false);
+
+  // eSewa redirects back here as /billing?payment=success&topup=<amount> —
+  // surface that as a quick confirmation banner rather than a silent balance bump.
+  const params = new URLSearchParams(window.location.search);
+  const topupSuccess = params.get('payment') === 'success' && params.get('topup');
 
   const planColor = PLAN_COLORS[status?.current_plan ?? 'free'] ?? '#6366f1';
   const planIcon  = PLAN_ICONS[status?.current_plan  ?? 'free'] ?? '◇';
@@ -131,11 +139,39 @@ export default function BillingPage() {
           </div>
         </div>
 
+        {topupSuccess && (
+          <p className="text-[13px] text-emerald-400 bg-emerald-400/5 border border-emerald-400/20 rounded-lg px-3.5 py-2.5">
+            ✓ Wallet topped up with NPR {Number(params.get('topup')).toLocaleString()}
+          </p>
+        )}
+
         {cancelMsg && (
           <p className="text-[13px] text-amber-400 bg-amber-400/5 border border-amber-400/20 rounded-lg px-3.5 py-2.5">
             {cancelMsg}
           </p>
         )}
+
+        {/* Wallet */}
+        <Section title="Wallet Balance" icon={<Wallet size={14} />}>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <p className="text-[26px] font-extrabold text-slate-100 m-0 tracking-[-0.03em] tabular-nums">
+                {walletLoading ? '…' : wallet ? `NPR ${wallet.credit_balance.toLocaleString()}` : '—'}
+              </p>
+              <p className="text-xs text-slate-600 m-0 mt-1 font-mono">
+                {wallet?.on_trial
+                  ? `${wallet.trial_tokens_remaining.toLocaleString()} / ${wallet.trial_tokens_total.toLocaleString()} trial tokens remaining`
+                  : 'Pay-as-you-go — used when trial tokens run out'}
+              </p>
+            </div>
+            <button
+              onClick={() => setShowTopUp(true)}
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 border-none rounded-xl text-white text-[13px] font-bold cursor-pointer flex items-center gap-2 transition-colors"
+            >
+              <span>+</span> Add Funds
+            </button>
+          </div>
+        </Section>
 
         {/* Usage */}
         <Section title="This Period's Usage" icon={<Zap size={14} />}>
@@ -201,6 +237,13 @@ export default function BillingPage() {
           currentPlan={status?.current_plan ?? 'free'}
           onClose={() => setShowUpgrade(false)}
           onPlanChanged={() => { setShowUpgrade(false); refetchStatus(); }}
+        />
+      )}
+
+      {showTopUp && (
+        <WalletTopUpModal
+          userId={userId}
+          onClose={() => { setShowTopUp(false); refetchWallet(); }}
         />
       )}
     </div>

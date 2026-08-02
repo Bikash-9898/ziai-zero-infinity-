@@ -39,10 +39,15 @@ export default function StripeButton({ plan, userId }: StripeButtonProps) {
       <button
         onClick={handlePay}
         disabled={loading}
+        aria-busy={loading}
         className="w-full flex items-center justify-center gap-2.5 px-5 py-3 bg-[#635bff] hover:brightness-110 text-white text-[15px] font-bold border-none rounded-xl cursor-pointer transition-[filter] duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
       >
         {loading ? (
-          <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          <span
+            role="status"
+            aria-label="Loading"
+            className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+          />
         ) : (
           <>
             <span className="w-6 h-6 rounded-md bg-white/20 flex items-center justify-center text-sm font-black shrink-0">

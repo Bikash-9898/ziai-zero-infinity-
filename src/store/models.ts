@@ -1,4 +1,6 @@
 export const MODELS: { id: string; label: string }[] = [
+  { id: 'auto',    label: '✨ Auto (smart routing)' },
+
   { id: 'llama3',  label: 'Llama 3.1 8B  (recommended)' },
   { id: 'qwen',    label: 'Qwen 2.5 7B' },
   { id: 'qwen3',   label: 'Qwen 3 4B  (fast)' },

@@ -5,6 +5,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import ClientDashboard from './pages/ClientDashboard';
 import ChatPage from './pages/ChatPage';
 import ImagePage from './pages/ImagePage';
+import LibraryPage from './pages/LibraryPage';
+import GuestPage from './pages/GuestPage';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AdminRoute } from './components/AdminRoute';
@@ -30,6 +32,11 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      {/* Standalone guest chat landing — minimal sidebar promoting sign-up.
+          /client/chat (via GuestGate) remains the full-app guest experience;
+          this is a lighter-weight entry point (e.g. from a "Continue as
+          Guest" CTA) that shares the exact same guest session/token. */}
+      <Route path="/guest" element={<GuestPage />} />
       {/* <Route path="/admin" element={<AdminDashboard />} /> */}
       <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
@@ -45,6 +52,7 @@ const App = () => {
         {/* Everything else under /client still requires a real account */}
         <Route element={<ProtectedLayout />}>
           <Route path="image"    element={<ImagePage />} />
+          <Route path="library"  element={<LibraryPage />} />
           <Route path="settings" element={<ClientSettings />} />
         </Route>
       </Route>

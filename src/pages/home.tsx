@@ -10,7 +10,6 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
 
   const navitems = [
     { name: 'Home', path : '/' },
-    { name: 'Chat', path: '/client/chat'},
     { name: 'Services', path: '/services'},
     { name: 'Contact', path: '/contact' }
   ]
@@ -72,7 +71,10 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
               Sign In
             </button>
           )}
-          <button className="hidden sm:block px-4 py-2 rounded-full bg-white text-black text-xs font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all transform hover:-translate-y-0.5 active:scale-95">
+          <button
+            onClick={() => navigate('/guest')}
+            className="hidden sm:block px-4 py-2 rounded-full bg-white text-black text-xs font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all transform hover:-translate-y-0.5 active:scale-95"
+          >
             Get Started
           </button>
         </div>
@@ -84,17 +86,20 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
 export default function Dashboard() {
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [chatPrompt, setChatPrompt] = useState('');
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleChatSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmedPrompt = chatPrompt.trim();
     if (!trimmedPrompt) return;
-    // No sign-in required — GuestGate on /client/chat auto-provisions a
-    // guest session (small trial, admin-restricted model) if needed.
+    if (!user) {
+      setIsSignInOpen(true);
+      return;
+    }
     sessionStorage.setItem('zi_pending_prompt', trimmedPrompt);
     setChatPrompt('');
-    navigate('/client/chat');
+    navigate('/client');
   };
 
   return (

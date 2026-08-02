@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/useAuth';
 import { apiFetch } from '@/api/apiClient';
+import { getStoredVoiceGender, storeVoiceGender, type VoiceGender } from '@/utils/ttsVoice';
 
 const ClientSettings = () => {
   const { user, setUser }                       = useAuth();
@@ -10,6 +11,10 @@ const ClientSettings = () => {
   const [saving, setSaving]                     = useState(false);
   const [saved, setSaved]                       = useState(false);
   const [error, setError]                       = useState<string | null>(null);
+  const [speechLang, setSpeechLang]             = useState(() => {
+    return localStorage.getItem('zi_speech_lang') || 'en-US';
+  });
+  const [voiceGender, setVoiceGender]           = useState<VoiceGender>(() => getStoredVoiceGender());
 
   const handleSave = async () => {
     if (!username.trim()) return;
@@ -93,6 +98,63 @@ const ClientSettings = () => {
                 'Save Changes'
               )}
             </button>
+          </div>
+        </div>
+
+        <div className="bg-white/5 border border-white/10 rounded-xl p-6 mt-6">
+          <h3 className="font-bold text-lg text-white mb-1">Voice &amp; Speech</h3>
+          <p className="text-gray-400 text-sm mb-4">Preferences for the voice conversation mode</p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">Default Speech-to-Text Language</label>
+              <select
+                value={speechLang}
+                onChange={e => {
+                  setSpeechLang(e.target.value);
+                  localStorage.setItem('zi_speech_lang', e.target.value);
+                }}
+                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/30 transition-colors"
+              >
+                <option value="en-US" className="bg-[#12121c] text-white">English (US)</option>
+                <option value="ne-NP" className="bg-[#12121c] text-white">नेपाली (Nepal)</option>
+                <option value="hi-IN" className="bg-[#12121c] text-white">हिन्दी (India)</option>
+                <option value="es-ES" className="bg-[#12121c] text-white">Español (Spain)</option>
+                <option value="fr-FR" className="bg-[#12121c] text-white">Français (France)</option>
+                <option value="de-DE" className="bg-[#12121c] text-white">Deutsch (Germany)</option>
+                <option value="zh-CN" className="bg-[#12121c] text-white">中文 (China)</option>
+                <option value="ja-JP" className="bg-[#12121c] text-white">日本語 (Japan)</option>
+              </select>
+              <p className="text-[11px] text-slate-500 mt-1">Sets the default recognition language for your voice inputs.</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-1">AI Voice (Text-to-Speech)</label>
+              <div className="grid grid-cols-2 gap-2">
+                {(['female', 'male'] as VoiceGender[]).map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      setVoiceGender(option);
+                      storeVoiceGender(option);
+                    }}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      voiceGender === option
+                        ? option === 'male'
+                          ? 'border-blue-400/60 bg-blue-500/10 text-blue-200'
+                          : 'border-pink-400/60 bg-pink-500/10 text-pink-200'
+                        : 'border-white/10 bg-white/5 text-slate-300 hover:bg-white/10'
+                    }`}
+                  >
+                    {option === 'male' ? 'Male voice' : 'Female voice'}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">
+                Used when you start a voice conversation with AI.
+              </p>
+            </div>
           </div>
         </div>
       </div>

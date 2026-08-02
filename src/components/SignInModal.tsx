@@ -59,6 +59,20 @@ export default function SignInModal({ isOpen, onClose }: { isOpen: boolean; onCl
           Continue with Google
         </button>
 
+        <button
+          onClick={() => {
+            onClose();
+            navigate('/guest');
+          }}
+          className="w-full flex items-center justify-center gap-3 px-6 py-3 mt-4 bg-transparent border border-white/10 text-white font-semibold rounded-full hover:bg-white/5 transition-all shadow-lg"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Continue as Guest
+        </button>
+
         <p className="mt-8 text-center text-xs text-gray-500">
           New here? <button className="text-purple-400 font-bold hover:underline">Create an account</button>
         </p>

@@ -7,6 +7,7 @@ import { useImageStore } from '@/store/useImageStore';
 import {
   MessageSquare,
   Image as ImageIcon,
+  Archive,
   Settings,
   LogOut,
   Plus,
@@ -41,6 +42,8 @@ export default function Sidebar({ onClose }: SidebarProps) {
   // ── Active tab derived from URL ────────────────────────────────────────────
   const activeTab = location.pathname.startsWith('/client/image')
     ? 'image'
+    : location.pathname.startsWith('/client/library')
+      ? 'library'
     : location.pathname.startsWith('/client/settings')
       ? 'settings'
       : 'chat';
@@ -167,6 +170,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <nav className="p-3 space-y-1">
           {navBtn('/client/chat',     <MessageSquare size={17} />, 'AI Chat Agent',     'chat')}
           {navBtn('/client/image',    <ImageIcon size={17} />,     'Image Generation',  'image')}
+          {navBtn('/client/library',  <Archive size={17} />,       'Library',           'library')}
           <Link
             to="/billingDashboard"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200"
