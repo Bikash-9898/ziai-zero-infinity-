@@ -5,12 +5,14 @@ import {
   getUsageHistory,
   getUsageSummary,
   getBillingStatus,
+  getWalletStatus,
   comparePlans,
   getPaymentHistory,
   type UsageResponse,
   type UsageHistoryResponse,
   type UsageSummaryResponse,
   type BillingStatus,
+  type WalletStatus,
   type PlanComparison,
   type PaymentRecord,
 } from "../api/billing";
@@ -192,6 +194,36 @@ export function useBillingStatus(userId: string | null | undefined) {
   }, [userId]);
 
   return { status, loading, error, refetch };
+}
+
+// ── useWallet ─────────────────────────────────────────────────────────────────
+
+export function useWallet(userId: string | null | undefined) {
+  const [wallet, setWallet]   = useState<WalletStatus | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
+
+  const load = useCallback(() => {
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getWalletStatus(userId!);
+        if (!cancelled) setWallet(data);
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to fetch wallet");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  return { wallet, loading, error, refetch: load };
 }
 
 // ── usePlanComparison ─────────────────────────────────────────────────────────

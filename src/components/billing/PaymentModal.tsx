@@ -14,13 +14,14 @@
 import { useState } from "react";
 import EsewaButton from "../payment/EsewaButton";
 import KhaltiButton from "../payment/Khaltibutton";
+import StripeButton from "../payment/StripeButton";
 
 interface PaymentModalProps {
   plan:     string;
   priceNPR: number;
   userId:   string;
   onClose:  () => void;
-}
+} 
 
 export default function PaymentModal({
   plan,
@@ -28,7 +29,7 @@ export default function PaymentModal({
   userId,
   onClose,
 }: PaymentModalProps) {
-  const [selectedProvider, setSelectedProvider] = useState<"esewa" | "khalti" | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<"esewa" | "khalti" | "stripe" | null>(null);
 
   const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
 
@@ -71,7 +72,7 @@ export default function PaymentModal({
         <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-600 m-0">
           Choose payment method
         </p>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <button
             className={`bg-[#1e293b] border rounded-xl px-3 py-4 flex flex-col items-center gap-1.5 cursor-pointer transition-all duration-150 hover:border-slate-500 hover:bg-[#273344] ${
               selectedProvider === "esewa"
@@ -101,6 +102,21 @@ export default function PaymentModal({
             <span className="text-sm font-semibold text-slate-200">Khalti</span>
             <span className="text-[10px] text-slate-500 uppercase tracking-[0.06em]">NPR · Digital</span>
           </button>
+
+          <button
+            className={`bg-[#1e293b] border rounded-xl px-3 py-4 flex flex-col items-center gap-1.5 cursor-pointer transition-all duration-150 hover:border-slate-500 hover:bg-[#273344] ${
+              selectedProvider === "stripe"
+                ? "border-indigo-500 bg-indigo-500/[0.07] shadow-[0_0_16px_rgba(99,102,241,0.13)]"
+                : "border-[#334155]"
+            }`}
+            onClick={() => setSelectedProvider("stripe")}
+          >
+            <span className="w-10 h-10 rounded-[10px] flex items-center justify-center text-[18px] font-black text-white bg-[#635bff]">
+              S
+            </span>
+            <span className="text-sm font-semibold text-slate-200">Stripe</span>
+            <span className="text-[10px] text-slate-500 uppercase tracking-[0.06em]">Cards · Wallet</span>
+          </button>
         </div>
 
         <div className="h-px bg-[#1e293b]" />
@@ -117,6 +133,9 @@ export default function PaymentModal({
           )}
           {selectedProvider === "khalti" && (
             <KhaltiButton plan={plan} userId={userId} />
+          )}
+          {selectedProvider === "stripe" && (
+            <StripeButton plan={plan} userId={userId} />
           )}
         </div>
 

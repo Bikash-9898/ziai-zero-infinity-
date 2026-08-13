@@ -1,6 +1,7 @@
 // src/components/AdminBillingView.tsx
 import { useState, useEffect } from 'react';
 import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
+import ProfitChart from './ProfitChart';
 
 // const API = 'http://localhost:8000';
 // const ADMIN_KEY = 'supersecretadminkey';
@@ -115,6 +116,9 @@ export default function AdminBillingView() {
         <StatCard label="Total Users"          value={String(totalUsers)}                             sub="registered"   color="#64748b" />
         <StatCard label="Enterprise"           value={String(data.plan_distribution.enterprise ?? 0)} sub="highest tier" color="#f59e0b" />
       </div>
+
+      {/* Profit analytics */}
+      <ProfitChart days={30} />
 
       {/* Plan distribution */}
       <div className="bg-[#0d1224] border border-slate-800 rounded-2xl px-6 py-5">

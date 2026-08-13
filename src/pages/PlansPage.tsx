@@ -99,9 +99,10 @@ import { useAuth } from '@/context/useAuth';
 import { useBillingStatus } from '@/hooks/useUsage';
 import { usePlanUpgrade } from '@/hooks/usePlanUpgrade';
 import PlanCard from '@/components/billing/PlanCard';
-import KhaltiButton from '@/components/payment/Khaltibutton';
+import KhaltiButton from '@/components/payment/Khaltibutton'; 
 import { ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import StripeButton from '@/components/payment/StripeButton';
 
 export default function PlansPage() {
   const { user, loading: authLoading } = useAuth();
@@ -255,6 +256,7 @@ export default function PlansPage() {
               </button>
 
               <KhaltiButton plan={selected.plan} userId={userId} />
+              <StripeButton plan={selected.plan} userId={userId} />
             </div>
 
             <div className="flex items-center justify-center gap-1.5 text-slate-700 text-xs">

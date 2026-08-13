@@ -9,6 +9,68 @@ export interface User {
   is_active: boolean;
   created_at: string; // ISO timestamp string
   role?: string;
+  is_guest?: boolean;
+}
+
+// Returned by GET /api/admin/users — User + aggregate usage/wallet info
+export interface AdminUserRow {
+  id: string;
+  email: string;
+  username: string;
+  plan: string;
+  is_active: boolean;
+  created_at: string;
+  trial_tokens_remaining: number;
+  credit_balance_npr: number;
+  total_tokens: number;
+  total_cost_usd: number;
+  total_requests: number;
+}
+
+export interface TokenAnalyticsPoint {
+  date: string;
+  tokens: number;
+  requests: number;
+}
+
+export interface TokenAnalyticsResponse {
+  daily: TokenAnalyticsPoint[];
+}
+
+export interface ProfitAnalyticsPoint {
+  date: string;
+  revenue_npr: number;
+  cost_npr: number;
+  profit_npr: number;
+}
+
+export interface ProfitAnalyticsResponse {
+  daily: ProfitAnalyticsPoint[];
+  total_revenue_npr: number;
+  total_cost_npr: number;
+  total_profit_npr: number;
+}
+
+// Returned by GET/POST/PUT /api/admin/image-models — the image model registry
+export interface ImageModelRow {
+  id: string;
+  display_name: string;
+  provider: string;               // 'huggingface' | 'fal' | 'pollinations'
+  provider_model_id: string;
+  credits_per_image: number;
+  is_active: boolean;
+  sort_order: number;
+}
+export interface AIModelRow {
+  id: string;
+  label: string;
+  provider: string;                 // 'huggingface' | 'openai' | 'anthropic'
+  provider_model_id: string;
+  input_price_per_million: number;
+  output_price_per_million: number;
+  is_active: boolean;
+  sort_order: number;
+  tier: 'fast' | 'balanced' | 'flagship';
 }
 
 export type View = 'overview' | 'users' | 'api-keys' | 'settings';

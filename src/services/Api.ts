@@ -35,7 +35,10 @@ export interface SendMessageResponse {
 
 // ── Chat ──────────────────────────────────────────────────────
 
-export async function sendMessage(params: SendMessageParams): Promise<SendMessageResponse> {
+export async function sendMessage(
+  params: SendMessageParams,
+  options?: RequestInit,
+): Promise<SendMessageResponse> {
   return apiJson<SendMessageResponse>('/chat/send', {
     method: 'POST',
     body: JSON.stringify({
@@ -43,6 +46,7 @@ export async function sendMessage(params: SendMessageParams): Promise<SendMessag
       conversation_id: params.conversation_id,
       model:           params.model,
     }),
+    ...options,
   });
 }
 

@@ -17,10 +17,10 @@ export default function KhaltiButton({ plan, userId }: KhaltiButtonProps) {
     try {
       const init = await initiateKhalti(plan, userId);
       window.location.href = init.payment_url;
-    } catch (e: any) {
-      setError(e?.message ?? 'Failed to initiate Khalti payment');
+    } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to initiate Khalti payment');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
   };
 

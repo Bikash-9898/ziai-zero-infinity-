@@ -38,4 +38,22 @@ export const authApi = {
     if (!res.ok) throw new Error('Failed to fetch user');
     return res.json(); // expects { user: User }
   },
+
+  // Auto-provision (or resume) a per-browser guest session — no sign-in required.
+  async guestLogin(clientGuestId: string) {
+    const res = await fetch(`${BASE_URL}/auth/guest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_guest_id: clientGuestId }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail ?? 'Guest login failed');
+    }
+    const data = await res.json();
+    if (data.access_token) {
+      tokenStore.set(data.access_token);
+    }
+    return data;
+  },
 };

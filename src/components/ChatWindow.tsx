@@ -3,7 +3,22 @@ import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/context/useAuth';
-import { Sparkles, Loader2, Copy, Check } from 'lucide-react';
+import { Sparkles, Loader2, Copy, Check, Edit3 } from 'lucide-react';
+import type { Message } from '@/store/chatTypes';
+
+const linkifyUrls = (text: string) => {
+  return text.replace(/https?:\/\/[^\s<>()]+/g, (url, offset, str) => {
+    const before = offset > 0 ? str[offset - 1] : '';
+    const after = str[offset + url.length] || '';
+    if (before === '<' || before === '(' || before === '[' || before === '"' || before === "'" || before === '=') {
+      return url;
+    }
+    if (after === '>' || after === ')' || after === ']' || after === '"' || after === "'") {
+      return url;
+    }
+    return `<${url}>`;
+  });
+};
 
 function hashString(value: string) {
   let hash = 0;
@@ -14,22 +29,46 @@ function hashString(value: string) {
 }
 
 export default function ChatWindow() {
-  const { messages, sending, loadingMessages } = useChatStore();
+  const { messages, sending, loadingMessages, send } = useChatStore();
   const { user }   = useAuth();
   const bottomRef  = useRef<HTMLDivElement>(null);
+  const editInputRef = useRef<HTMLTextAreaElement>(null);
   const [activeCopyIndex, setActiveCopyIndex] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState('');
   const [activeCodeCopyId, setActiveCodeCopyId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [refreshPrompt] = useState(() => {
+    const username = user?.username ? user.username : 'there';
+    const prompts = [
+      'Ready when you are',
+      "What's on the agenda today?",
+      `Good to see you, ${username}`,
+      `How can I help, ${username}?`,
+      'Where should we begin?',
+    ];
+    return prompts[Math.floor(Math.random() * prompts.length)];
+  });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, sending]);
 
   useEffect(() => {
+    if (editingIndex === null) return;
+    editInputRef.current?.focus();
+    editInputRef.current?.setSelectionRange(editDraft.length, editDraft.length);
+  }, [editingIndex, editDraft.length]);
+
+  useEffect(() => {
     return () => {
       if (toastTimer.current) {
         clearTimeout(toastTimer.current);
+      }
+      if (copyTimer.current) {
+        clearTimeout(copyTimer.current);
       }
     };
   }, []);
@@ -50,10 +89,10 @@ export default function ChatWindow() {
       setActiveCopyIndex(idx);
       showToast('Copied to clipboard');
 
-      if (toastTimer.current) {
-        clearTimeout(toastTimer.current);
+      if (copyTimer.current) {
+        clearTimeout(copyTimer.current);
       }
-      toastTimer.current = setTimeout(() => {
+      copyTimer.current = setTimeout(() => {
         setActiveCopyIndex(null);
       }, 2000);
     } catch {
@@ -67,10 +106,10 @@ export default function ChatWindow() {
       setActiveCodeCopyId(id);
       showToast('Copied to clipboard');
 
-      if (toastTimer.current) {
-        clearTimeout(toastTimer.current);
+      if (copyTimer.current) {
+        clearTimeout(copyTimer.current);
       }
-      toastTimer.current = setTimeout(() => {
+      copyTimer.current = setTimeout(() => {
         setActiveCodeCopyId(null);
       }, 2000);
     } catch {
@@ -78,7 +117,37 @@ export default function ChatWindow() {
     }
   };
 
+  const startEdit = (idx: number, content: string) => {
+    setEditingIndex(idx);
+    setEditDraft(content);
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setEditDraft('');
+  };
+
+  const saveEdit = async (idx: number) => {
+    const trimmed = editDraft.trim();
+    if (!trimmed) return;
+
+    setEditingIndex(null);
+    setEditDraft('');
+    await send(trimmed, { replaceUserIndex: idx });
+  };
+
   const MarkdownComponents = {
+    a: ({ href, children, ...props }: any) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="text-purple-300 underline transition hover:text-purple-100"
+        {...props}
+      >
+        {children}
+      </a>
+    ),
     code: ({ inline, className, children, ...props }: any) => {
       const codeText = String(children).replace(/\n$/, '');
       if (inline) {
@@ -93,7 +162,8 @@ export default function ChatWindow() {
       const copied = activeCodeCopyId === codeId;
 
       return (
-        <div className="code-block relative mt-4">
+        <div className="relative mt-4 w-full max-w-full overflow-x-auto overflow-y-hidden whitespace-pre break-normal rounded-xl border border-slate-700/60 bg-slate-950/90 box-border [overflow>
+        -wrap:normal] shadow-[0_0_0_1px_rgba(255,255,255,0.03)]">
           <button
             type="button"
             onClick={() => handleCopyCode(codeText, codeId)}
@@ -112,13 +182,21 @@ export default function ChatWindow() {
             [&::-webkit-scrollbar-thumb]:rounded-full
             hover:[&::-webkit-scrollbar-thumb]:bg-purple-500/60
           ">
-            <code className={`${className ?? ''} block min-w-[max-content] whitespace-pre`} {...props}>
+            <code className={`${className ?? ''} block min-w-max whitespace-pre`} {...props}>
               {codeText}
             </code>
           </pre>
         </div>
       );
     },
+    img: ({ src, alt, ...props }: any) => (
+      <img 
+        src={src} 
+        alt={alt} 
+        className="max-w-full rounded-xl mt-4 mb-2 shadow-lg shadow-black/20 object-contain max-h-75" 
+        {...props} 
+      />
+    ),
   };
 
   // Loading state
@@ -133,12 +211,18 @@ export default function ChatWindow() {
   // Empty state — shown before any messages
   if (messages.length === 0 && !sending) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center px-4 text-center min-h-[60vh]">
-        <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center mb-5 shadow-lg shadow-purple-500/20">
-          <Sparkles size={22} className="text-white" />
+      <div className="flex-1 flex items-center justify-center px-4 min-h-[calc(100vh-5rem)]">
+        <div className="w-full max-w-2xl rounded-4xl border border-white/10 bg-[#0b0b1a]/90 p-8 shadow-[0_0_60px_rgba(15,23,42,0.55)]">
+          <div className="mx-auto text-center">
+            <div className="flex items-center justify-center w-14 h-14 rounded-3xl bg-purple-600/15 mx-auto mb-6">
+              <Sparkles size={24} className="text-purple-300" />
+            </div>
+            <h1 className="text-3xl font-semibold text-white mb-3">{refreshPrompt}</h1>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Start a new chat and I’ll help you with your next plan, task, or idea.
+            </p>
+          </div>
         </div>
-        <h1 className="text-2xl font-semibold text-white mb-2">How can I help you today?</h1>
-        <p className="text-sm text-slate-500 max-w-sm">Ask me anything — I'm your AI assistant.</p>
       </div>
     );
   }
@@ -148,13 +232,14 @@ export default function ChatWindow() {
     <div className="py-8 px-4">
       <div className="max-w-3xl mx-auto w-full space-y-6">
 
-        {messages.map((msg, idx) => {
+        {messages.map((msg: Message, idx: number) => {
           const isAssistant = msg.role === 'assistant';
           const isCopied = activeCopyIndex === idx;
+          const isEditing = editingIndex === idx;
           const bubbleClasses = isAssistant
             ? 'bg-slate-800 border border-white/10 text-slate-100'
             : 'bg-gradient-to-r from-purple-700 to-violet-600 text-white';
-          const textPadding = isAssistant ? 'pl-4 pr-14 py-4' : 'pl-4 pr-14 py-4';
+          const textPadding = isEditing ? 'pl-4 pr-4 py-4' : 'pl-4 pr-24 py-4';
 
           return (
             <div key={idx} className={`flex gap-3 items-start ${isAssistant ? '' : 'justify-end'}`}>
@@ -164,22 +249,63 @@ export default function ChatWindow() {
                 </div>
               )}
 
-              <div className={`relative max-w-[85%] ${bubbleClasses} rounded-[20px] shadow-[0_30px_80px_-60px_rgba(15,23,42,0.75)] chat-message`}>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(msg.content, idx)}
-                  className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/70 text-slate-200 transition duration-200 ease-out hover:bg-slate-800/90 hover:text-white"
-                  aria-label="Copy message"
-                >
-                  {isCopied ? <Check size={16} /> : <Copy size={16} />}
-                </button>
-                <div className={`min-h-[48px] whitespace-pre-wrap break-words ${textPadding}`}>
-                  {isAssistant ? (
-                    <div className="prose prose-invert text-xs md:text-sm lg:text-base prose-sm max-w-none text-slate-200 leading-relaxed message-content">
-                      <ReactMarkdown components={MarkdownComponents}>{msg.content}</ReactMarkdown>
+              <div className={`relative max-w-[85%] overflow-hidden ${bubbleClasses} rounded-[20px] shadow-[0_30px_80px_-60px_rgba(15,23,42,0.75)]`}>
+                {!isAssistant && !isEditing && (
+                  <button
+                    type="button"
+                    onClick={() => startEdit(idx, msg.content)}
+                    className="absolute top-3 right-12 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/70 text-slate-200 transition duration-200 ease-out hover:bg-slate-800/90 hover:text-white"
+                    aria-label="Edit message"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                )}
+                {!isEditing && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(msg.content, idx)}
+                    className="absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-900/70 text-slate-200 transition duration-200 ease-out hover:bg-slate-800/90 hover:text-white"
+                    aria-label="Copy message"
+                  >
+                    {isCopied ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                )}
+                <div className={`min-h-12 whitespace-pre-wrap wrap-break-word ${textPadding}`}>
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <textarea
+                        ref={editInputRef}
+                        value={editDraft}
+                        onChange={(e) => setEditDraft(e.target.value)}
+                        className="w-full min-h-22.5 resize-y rounded-xl border border-white/10 bg-slate-950/70 p-3 text-sm text-slate-100 outline-none"
+                        placeholder="Edit your question"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          className="rounded-lg border border-white/10 px-3 py-1.5 text-sm text-slate-300 hover:bg-white/10"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void saveEdit(idx)}
+                          disabled={!editDraft.trim() || sending}
+                          className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Save & resend
+                        </button>
+                      </div>
+                    </div>
+                  ) : isAssistant ? (
+                    <div className="prose prose-invert w-full overflow-hidden text-xs md:text-sm lg:text-base prose-sm max-w-none text-slate-200 leading-relaxed">
+                      <ReactMarkdown components={MarkdownComponents}>{linkifyUrls(msg.content)}</ReactMarkdown>
                     </div>
                   ) : (
-                    <div className="text-sm leading-relaxed message-content">{msg.content}</div>
+                    <div className="prose prose-invert w-full overflow-hidden text-sm max-w-none text-white leading-relaxed">
+                      <ReactMarkdown components={MarkdownComponents}>{linkifyUrls(msg.content)}</ReactMarkdown>
+                    </div>
                   )}
                 </div>
               </div>

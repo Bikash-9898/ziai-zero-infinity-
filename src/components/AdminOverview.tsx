@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Activity, Database, Users } from 'lucide-react';
 import StatCard from "./StatCard"
+import TokenUsageChart from './TokenUsageChart';
 import { ADMIN_SECRET_KEY, BASE_URL } from '@/config';
 
 interface Stats {
@@ -33,25 +34,29 @@ export default function AdminOverview() {
   if (!stats) return <div className="text-red-400">Failed to load dashboard data.</div>;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <StatCard 
-        title="Active Requests" 
-        value={stats.active_requests.toLocaleString()} 
-        icon={<Activity size={24} />} 
-      />
-      
-      <StatCard 
-        title="Total Tokens" 
-        // value={`${(stats.total_tokens / 1000000).toFixed(1)}M`} 
-        value={formatTokens(stats.total_tokens)}   // smart unit
-        icon={<Database size={24} />} 
-      />
-      
-      <StatCard 
-        title="New Users" 
-        value={`+${stats.new_users}`} 
-        icon={<Users size={24} />} 
-      />
+    <div className="flex flex-col gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <StatCard 
+          title="Active Requests" 
+          value={stats.active_requests.toLocaleString()} 
+          icon={<Activity size={24} />} 
+        />
+        
+        <StatCard 
+          title="Total Tokens" 
+          // value={`${(stats.total_tokens / 1000000).toFixed(1)}M`} 
+          value={formatTokens(stats.total_tokens)}   // smart unit
+          icon={<Database size={24} />} 
+        />
+        
+        <StatCard 
+          title="New Users" 
+          value={`+${stats.new_users}`} 
+          icon={<Users size={24} />} 
+        />
+      </div>
+
+      <TokenUsageChart days={30} />
     </div>
   );
 }

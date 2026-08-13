@@ -4,9 +4,11 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/useAuth';
 import { useChatStore } from '@/store/useChatStore';
 import { useImageStore } from '@/store/useImageStore';
+import type { GeneratedImage } from '@/types/image';
 import {
   MessageSquare,
   Image as ImageIcon,
+  Archive,
   Settings,
   LogOut,
   Plus,
@@ -14,6 +16,7 @@ import {
   Loader2,
   Bot,
   CreditCard,
+  Download,
   // Zap,
   X,
   UserRound,
@@ -41,13 +44,15 @@ export default function Sidebar({ onClose }: SidebarProps) {
   // ── Active tab derived from URL ────────────────────────────────────────────
   const activeTab = location.pathname.startsWith('/client/image')
     ? 'image'
+    : location.pathname.startsWith('/client/library')
+      ? 'library'
     : location.pathname.startsWith('/client/settings')
       ? 'settings'
       : 'chat';
 
   // ── Derived user info ──────────────────────────────────────────────────────
   const displayName  = user?.username || 'Guest';
-  const displayEmail = user?.email    || 'Not signed in';
+  const displayEmail = user?.is_guest ? 'Sign in to save your chats' : (user?.email || 'Not signed in');
   const userInitial  = displayName.trim().charAt(0).toUpperCase() || 'U';
   const planLabel    = user?.plan ?? 'Free';
   const planColor    = PLAN_COLORS[user?.plan ?? 'free'] ?? '#64748b';
@@ -66,6 +71,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   // ── Image store ────────────────────────────────────────────────────────────
   const { history: imageHistory, status: imageStatus } = useImageStore();
+  const [previewImage, setPreviewImage] = useState<GeneratedImage | null>(null);
 
   // ── Fetch conversations on mount ───────────────────────────────────────────
   useEffect(() => {
@@ -99,6 +105,27 @@ export default function Sidebar({ onClose }: SidebarProps) {
   const handleLogout = () => {
     setAccountMenuOpen(false);
     logout();
+    navigate('/');
+    onClose?.();
+  };
+
+  const handleImageDownload = async (url: string) => {
+    try {
+      let downloadUrl = url;
+      if (!url.startsWith('data:')) {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        downloadUrl = URL.createObjectURL(blob);
+      }
+
+      const anchor = document.createElement('a');
+      anchor.href = downloadUrl;
+      anchor.download = 'generated-image.png';
+      anchor.click();
+      if (!url.startsWith('data:')) URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error('Failed to download image', err);
+    }
   };
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -167,6 +194,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <nav className="p-3 space-y-1">
           {navBtn('/client/chat',     <MessageSquare size={17} />, 'AI Chat Agent',     'chat')}
           {navBtn('/client/image',    <ImageIcon size={17} />,     'Image Generation',  'image')}
+          {navBtn('/client/library',  <Archive size={17} />,       'Library',           'library')}
           <Link
             to="/billingDashboard"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-slate-200"
@@ -273,19 +301,31 @@ export default function Sidebar({ onClose }: SidebarProps) {
               {imageStatus !== 'generating' && imageHistory.length > 0 && (
                 <div className="grid grid-cols-3 gap-1.5">
                   {imageHistory.slice(0, 12).map((img) => (
-                    <Link
-                      key={img.id}
-                      to="/client/image"
-                      onClick={onClose}
-                      className="aspect-square rounded-lg overflow-hidden border border-slate-800/60 hover:border-slate-600 transition-all cursor-pointer"
-                      title={img.prompt}
-                    >
+                    <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden border border-slate-800/60 hover:border-slate-600 transition-all">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewImage(img)}
+                        className="absolute inset-0 z-10"
+                        title={img.prompt}
+                      />
                       <img
                         src={img.image_url}
                         alt={img.prompt}
                         className="w-full h-full object-cover"
                       />
-                    </Link>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          event.preventDefault();
+                          handleImageDownload(img.image_url);
+                        }}
+                        className="absolute bottom-2 right-2 z-20 rounded-full bg-slate-950/90 p-2 text-slate-100 shadow-lg shadow-black/30 hover:bg-slate-900"
+                        title="Download image"
+                      >
+                        <Download size={14} />
+                      </button>
+                    </div>
                   ))}
                 </div>
               )}
@@ -309,6 +349,48 @@ export default function Sidebar({ onClose }: SidebarProps) {
             </button>
           </div>
         )} */}
+
+        {/* ── Preview popup for sidebar images ── */}
+        {previewImage && (
+          <div
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+            onClick={() => setPreviewImage(null)}
+          >
+            <div
+              className="relative max-w-3xl w-full rounded-3xl overflow-hidden border border-slate-800 bg-slate-950"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <img
+                src={previewImage.image_url}
+                alt={previewImage.prompt}
+                className="w-full max-h-[80vh] object-contain bg-black"
+              />
+              <div className="p-4">
+                <p className="text-sm text-slate-200 font-mono leading-relaxed">{previewImage.prompt}</p>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 font-mono">
+                  <span>{previewImage.model}</span>
+                  <span>{new Date(previewImage.created_at).toLocaleString()}</span>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleImageDownload(previewImage.image_url)}
+                    className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm text-slate-100 hover:bg-slate-700"
+                  >
+                    <Download size={14} /> Download
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewImage(null)}
+                    className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                  >
+                    <X size={14} /> Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── Footer — account popover ── */}
         <div ref={accountMenuRef} className="relative p-3 border-t border-white/5">

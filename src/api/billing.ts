@@ -104,6 +104,19 @@ export interface EsewaPayloadResponse {
   transaction_uuid: string;
 }
 
+export interface WalletStatus {
+  user_id: string;
+  trial_tokens_remaining: number;
+  trial_tokens_total: number;
+  on_trial: boolean;
+  credit_balance: number;
+}
+
+export interface StripeCheckoutSessionResponse {
+  id: string;
+  url?: string;
+}
+
 // ── Plans ─────────────────────────────────────────────────────────────────────
 
 export const getPlans       = (): Promise<PlanInfo[]>        => apiJson('/plans/');
@@ -115,6 +128,9 @@ export const comparePlans   = (userId: string): Promise<PlanComparison[]> =>
 
 export const getBillingStatus = (userId: string): Promise<BillingStatus> =>
   apiJson(`/billing/status/${userId}`);
+
+export const getWalletStatus = (userId: string): Promise<WalletStatus> =>
+  apiJson(`/billing/wallet/${userId}`);
 
 export const getSubscription = (userId: string): Promise<SubscriptionResponse> =>
   apiJson(`/billing/subscription/${userId}`);
@@ -136,6 +152,12 @@ export const cancelSubscription = (
 export const initiateEsewa = (plan: string, userId: string): Promise<EsewaPayloadResponse> =>
   apiJson(`/billing/esewa/initiate?plan=${plan}&user_id=${userId}`, { method: 'POST' });
 
+// Wallet top-up: arbitrary NPR amount, not tied to a subscription plan.
+// Only eSewa supports this today — see app/controllers/esewa_controller.py.
+// Khalti/Stripe wallet top-up aren't wired on the backend yet.
+export const initiateEsewaTopup = (amountNpr: number, userId: string): Promise<EsewaPayloadResponse> =>
+  apiJson(`/billing/esewa/topup/initiate?amount_npr=${amountNpr}&user_id=${userId}`, { method: 'POST' });
+
 export interface KhaltiInitiateResponse {
   payment_url: string;
   pidx: string;
@@ -145,8 +167,20 @@ export interface KhaltiInitiateResponse {
 export const initiateKhalti = (plan: string, userId: string): Promise<KhaltiInitiateResponse> =>
   apiJson(`/billing/khalti/initiate?plan=${plan}&user_id=${userId}`, { method: 'POST' });
 
-export const verifyKhalti = (payload: any): Promise<{ verified: boolean; detail?: string }> =>
+interface KhaltiVerifyPayload {
+  pidx: string;
+  order_id: string;
+}
+
+export const verifyKhalti = (payload: KhaltiVerifyPayload): Promise<{ verified: boolean; detail?: string }> =>
   apiJson(`/billing/khalti/verify`, { method: 'POST', body: JSON.stringify(payload) });
+
+export const createStripeCheckoutSession = (
+  plan: string,
+  userId: string,
+): Promise<StripeCheckoutSessionResponse> =>
+  apiJson(`/billing/stripe/initiate?plan=${plan}&user_id=${userId}`, { method: 'POST' });
+
 
 // ── Usage ─────────────────────────────────────────────────────────────────────
 

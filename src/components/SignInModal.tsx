@@ -14,7 +14,7 @@ export default function SignInModal({ isOpen, onClose }: { isOpen: boolean; onCl
         // We need the ID token — use the credential flow instead
         await login(tokenResponse.access_token);
         onClose();
-        navigate('/client');
+        navigate('/client/chat');
       } catch (error) {
         console.error('Login error:', error);
       }
@@ -57,6 +57,20 @@ export default function SignInModal({ isOpen, onClose }: { isOpen: boolean; onCl
             <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.2 5.2C40.8 35.7 44 30.2 44 24c0-1.3-.1-2.7-.4-3.9z"/>
           </svg>
           Continue with Google
+        </button>
+
+        <button
+          onClick={() => {
+            onClose();
+            navigate('/guest');
+          }}
+          className="w-full flex items-center justify-center gap-3 px-6 py-3 mt-4 bg-transparent border border-white/10 text-white font-semibold rounded-full hover:bg-white/5 transition-all shadow-lg"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Continue as Guest
         </button>
 
         <p className="mt-8 text-center text-xs text-gray-500">

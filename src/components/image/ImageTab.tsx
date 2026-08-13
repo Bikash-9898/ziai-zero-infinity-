@@ -1,8 +1,9 @@
 // src/components/image/ImageTab.tsx
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { GeneratedImage } from '@/types/image';
 import { useImageStore } from '@/store/useImageStore';
 import ImagePromptInput from './ImagePromptInput';
-import { Download, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
+import { Download, AlertCircle, Sparkles, Trash2, X } from 'lucide-react';
 
 export default function ImageTab() {
   const {
@@ -12,6 +13,7 @@ export default function ImageTab() {
     activeSessionId,
     deleteImage,
   } = useImageStore();
+  const [previewImage, setPreviewImage] = useState<GeneratedImage | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -20,12 +22,23 @@ export default function ImageTab() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history, status, activeSessionId]);
 
-  const handleDownload = useCallback((url: string) => {
-    const a = document.createElement('a');
-    a.href = url;
-    const ts = new Date().getTime();
-    a.download = `generated-${ts}.png`;
-    a.click();
+  const handleDownload = useCallback(async (url: string) => {
+    try {
+      let downloadUrl = url;
+      if (!url.startsWith('data:')) {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        downloadUrl = URL.createObjectURL(blob);
+      }
+
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `generated-${Date.now()}.png`;
+      a.click();
+      if (!url.startsWith('data:')) URL.revokeObjectURL(downloadUrl);
+    } catch (err) {
+      console.error('Download failed', err);
+    }
   }, []);
 
   // Only show images belonging to the active session
@@ -73,16 +86,28 @@ export default function ImageTab() {
               {/* Generated image */}
               <div className="flex justify-start">
                 <div className="group relative rounded-2xl overflow-hidden border border-white/10 max-w-sm w-full">
-                  <img src={img.image_url} alt={img.prompt} className="w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setPreviewImage(img)}
+                    className="w-full h-full"
+                  >
+                    <img src={img.image_url} alt={img.prompt} className="w-full object-cover" />
+                  </button>
                   <div className="absolute top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => handleDownload(img.image_url)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDownload(img.image_url);
+                      }}
                       className="bg-black/60 hover:bg-black/80 rounded-lg p-1.5 text-white"
                     >
                       <Download size={14} />
                     </button>
                     <button
-                      onClick={() => deleteImage(img.id)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        deleteImage(img.id);
+                      }}
                       className="bg-black/60 hover:bg-red-600/80 rounded-lg p-1.5 text-white"
                     >
                       <Trash2 size={14} />
@@ -120,6 +145,43 @@ export default function ImageTab() {
           )}
 
           <div ref={bottomRef} />
+
+          {previewImage && (
+            <div
+              className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4"
+              onClick={() => setPreviewImage(null)}
+            >
+              <div
+                className="relative max-w-4xl w-full rounded-3xl overflow-hidden border border-slate-800 bg-slate-950"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <img src={previewImage.image_url} alt={previewImage.prompt} className="w-full max-h-[80vh] object-contain bg-black" />
+                <div className="p-4 space-y-3">
+                  <p className="text-sm text-slate-200 font-mono leading-relaxed">{previewImage.prompt}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500 font-mono">
+                    <span>{previewImage.model}</span>
+                    <span>{new Date(previewImage.created_at).toLocaleString()}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(previewImage.image_url)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2 text-sm text-slate-100 hover:bg-slate-700"
+                    >
+                      <Download size={14} /> Download
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewImage(null)}
+                      className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200 hover:bg-slate-800"
+                    >
+                      <X size={14} /> Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

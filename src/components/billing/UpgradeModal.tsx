@@ -5,6 +5,7 @@ import { usePlanUpgrade } from '@/hooks/usePlanUpgrade';
 import { type PlanComparison } from '@/api/billing';
 import PlanCard from './PlanCard';
 import KhaltiButton from '../payment/Khaltibutton';
+import StripeButton from '../payment/StripeButton';
 
 interface UpgradeModalProps {
   userId:       string;
@@ -184,12 +185,13 @@ function PaymentStep({ selected, userId, error, actionLoading, onPay }: {
           )}
         </button>
 
+        <StripeButton plan={selected.plan} userId={userId} />
         <KhaltiButton plan={selected.plan} userId={userId} />
       </div>
 
       <div className="flex items-center justify-center gap-1.5 text-slate-700 text-xs">
         <ShieldCheck size={14} />
-        Secured &amp; verified by eSewa and Khalti payment gateways
+        Secured &amp; verified by Stripe, eSewa, and Khalti payment gateways
       </div>
     </div>
   );

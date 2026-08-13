@@ -57,7 +57,12 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
                 <span className="truncate text-xs font-medium text-gray-200 sm:text-sm">{user.username}</span>
               </div>
               <button
-                onClick={logout}
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  logout();
+                  navigate('/');
+                }}
                 className="p-2 hover:bg-red-500/10 hover:text-red-400 text-gray-400 rounded-full transition-colors"
               >
                 <LogOut size={16} />
@@ -71,7 +76,10 @@ const Navbar = ({ onSignInClick }: { onSignInClick: () => void }) => {
               Sign In
             </button>
           )}
-          <button className="hidden sm:block px-4 py-2 rounded-full bg-white text-black text-xs font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all transform hover:-translate-y-0.5 active:scale-95">
+          <button
+            onClick={() => navigate(user ? '/client/chat' : '/guest')}
+            className="hidden sm:block px-4 py-2 rounded-full bg-white text-black text-xs font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all transform hover:-translate-y-0.5 active:scale-95"
+          >
             Get Started
           </button>
         </div>
@@ -96,7 +104,7 @@ export default function Dashboard() {
     }
     sessionStorage.setItem('zi_pending_prompt', trimmedPrompt);
     setChatPrompt('');
-    navigate('/client');
+    navigate('/client/chat');
   };
 
   return (

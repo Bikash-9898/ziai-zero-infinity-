@@ -4,7 +4,8 @@ import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/useAuth";
 import UsageBar from "../components/billing/UsageBar";
-import { useUsage, useBillingStatus, useUsageSummary, daysUntil, formatTokens } from "../hooks/useUsage";
+import WalletTopUpModal from "../components/billing/WalletTopUpModal";
+import { useUsage, useBillingStatus, useUsageSummary, useWallet, daysUntil, formatTokens } from "../hooks/useUsage";
 
 const PLAN_COLORS: Record<string, string> = {
   free:       "#64748b",
@@ -23,6 +24,9 @@ export default function BillingDashboard() {
   const { usage, loading: usageLoading } = useUsage(skip ? undefined : userId);
   const { status }                       = useBillingStatus(skip ? undefined : userId);
   const { summary }                      = useUsageSummary(skip ? undefined : userId, 7);
+  const { wallet, loading: walletLoading, refetch: refetchWallet } = useWallet(skip ? undefined : userId);
+
+  const [showTopUp, setShowTopUp] = React.useState(false);
 
   const planColor    = PLAN_COLORS[status?.current_plan ?? "free"] ?? "#6366f1";
   const daysLeft     = daysUntil(status?.subscription.period_end ?? null);
@@ -94,10 +98,21 @@ export default function BillingDashboard() {
             value={status?.last_payment.amount ? `NPR ${Number(status.last_payment.amount).toLocaleString()}` : "—"}
             sub={status?.last_payment.provider ? `via ${status.last_payment.provider}` : "no payments yet"}
           />
+          <StatCard
+            label="Wallet Balance"
+            value={walletLoading ? "…" : wallet ? `NPR ${wallet.credit_balance.toLocaleString()}` : "—"}
+            sub={wallet?.on_trial ? `${formatTokens(wallet.trial_tokens_remaining)} trial tokens left` : "pay-as-you-go"}
+          />
         </div>
 
         {/* Quick actions */}
         <div className="flex gap-3 flex-wrap">
+          <button
+            onClick={() => setShowTopUp(true)}
+            className="flex items-center gap-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white text-[13px] font-semibold transition-colors"
+          >
+            <span>+</span> Add Funds
+          </button>
           <button
             onClick={() => navigate('/plans')}
             className="flex items-center gap-2 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white text-[13px] font-semibold transition-colors"
@@ -180,6 +195,13 @@ export default function BillingDashboard() {
         )}
 
       </div>
+
+      {showTopUp && (
+        <WalletTopUpModal
+          userId={userId}
+          onClose={() => { setShowTopUp(false); refetchWallet(); }}
+        />
+      )}
     </div>
   );
 }
