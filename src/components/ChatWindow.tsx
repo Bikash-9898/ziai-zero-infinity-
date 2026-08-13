@@ -6,6 +6,20 @@ import { useAuth } from '@/context/useAuth';
 import { Sparkles, Loader2, Copy, Check, Edit3 } from 'lucide-react';
 import type { Message } from '@/store/chatTypes';
 
+const linkifyUrls = (text: string) => {
+  return text.replace(/https?:\/\/[^\s<>()]+/g, (url, offset, str) => {
+    const before = offset > 0 ? str[offset - 1] : '';
+    const after = str[offset + url.length] || '';
+    if (before === '<' || before === '(' || before === '[' || before === '"' || before === "'" || before === '=') {
+      return url;
+    }
+    if (after === '>' || after === ')' || after === ']' || after === '"' || after === "'") {
+      return url;
+    }
+    return `<${url}>`;
+  });
+};
+
 function hashString(value: string) {
   let hash = 0;
   for (let i = 0; i < value.length; i += 1) {
@@ -25,6 +39,7 @@ export default function ChatWindow() {
   const [activeCodeCopyId, setActiveCodeCopyId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [refreshPrompt] = useState(() => {
     const username = user?.username ? user.username : 'there';
     const prompts = [
@@ -52,6 +67,9 @@ export default function ChatWindow() {
       if (toastTimer.current) {
         clearTimeout(toastTimer.current);
       }
+      if (copyTimer.current) {
+        clearTimeout(copyTimer.current);
+      }
     };
   }, []);
 
@@ -71,10 +89,10 @@ export default function ChatWindow() {
       setActiveCopyIndex(idx);
       showToast('Copied to clipboard');
 
-      if (toastTimer.current) {
-        clearTimeout(toastTimer.current);
+      if (copyTimer.current) {
+        clearTimeout(copyTimer.current);
       }
-      toastTimer.current = setTimeout(() => {
+      copyTimer.current = setTimeout(() => {
         setActiveCopyIndex(null);
       }, 2000);
     } catch {
@@ -88,10 +106,10 @@ export default function ChatWindow() {
       setActiveCodeCopyId(id);
       showToast('Copied to clipboard');
 
-      if (toastTimer.current) {
-        clearTimeout(toastTimer.current);
+      if (copyTimer.current) {
+        clearTimeout(copyTimer.current);
       }
-      toastTimer.current = setTimeout(() => {
+      copyTimer.current = setTimeout(() => {
         setActiveCodeCopyId(null);
       }, 2000);
     } catch {
@@ -119,6 +137,17 @@ export default function ChatWindow() {
   };
 
   const MarkdownComponents = {
+    a: ({ href, children, ...props }: any) => (
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer noopener"
+        className="text-purple-300 underline transition hover:text-purple-100"
+        {...props}
+      >
+        {children}
+      </a>
+    ),
     code: ({ inline, className, children, ...props }: any) => {
       const codeText = String(children).replace(/\n$/, '');
       if (inline) {
@@ -271,11 +300,11 @@ export default function ChatWindow() {
                     </div>
                   ) : isAssistant ? (
                     <div className="prose prose-invert w-full overflow-hidden text-xs md:text-sm lg:text-base prose-sm max-w-none text-slate-200 leading-relaxed">
-                      <ReactMarkdown components={MarkdownComponents}>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown components={MarkdownComponents}>{linkifyUrls(msg.content)}</ReactMarkdown>
                     </div>
                   ) : (
                     <div className="prose prose-invert w-full overflow-hidden text-sm max-w-none text-white leading-relaxed">
-                      <ReactMarkdown components={MarkdownComponents}>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown components={MarkdownComponents}>{linkifyUrls(msg.content)}</ReactMarkdown>
                     </div>
                   )}
                 </div>
