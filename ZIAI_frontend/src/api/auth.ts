@@ -1,0 +1,59 @@
+// src/api/auth.ts
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api';
+
+const TOKEN_KEY = 'zi_token';
+
+export const tokenStore = {
+  get: (): string | null => localStorage.getItem(TOKEN_KEY),
+  set: (token: string)   => localStorage.setItem(TOKEN_KEY, token),
+  clear: ()              => localStorage.removeItem(TOKEN_KEY),
+};
+
+export const authApi = {
+  async verifyGoogleToken(accessToken: string) {
+    const res = await fetch(`${BASE_URL}/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: accessToken }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail ?? 'Auth failed');
+    }
+    const data = await res.json();
+    // Store the JWT the backend now returns
+    if (data.access_token) {
+      tokenStore.set(data.access_token);
+    }
+    return data;
+  },
+
+  // Fetch current user from backend — used to refresh plan/profile after changes
+  async getMe() {
+    const token = tokenStore.get();
+    if (!token) throw new Error('No token');
+    const res = await fetch(`${BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error('Failed to fetch user');
+    return res.json(); // expects { user: User }
+  },
+
+  // Auto-provision (or resume) a per-browser guest session — no sign-in required.
+  async guestLogin(clientGuestId: string) {
+    const res = await fetch(`${BASE_URL}/auth/guest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_guest_id: clientGuestId }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail ?? 'Guest login failed');
+    }
+    const data = await res.json();
+    if (data.access_token) {
+      tokenStore.set(data.access_token);
+    }
+    return data;
+  },
+};

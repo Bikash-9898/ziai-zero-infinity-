@@ -1,0 +1,11 @@
+httpx>=0.23.0
+trafilatura
+readability-lxml
+newspaper3k
+lxml
+python-magic
+certifi
+
+# Optional: SerpAPI / Serper providers if you plan to use them
+serpapi
+google-api-python-client
