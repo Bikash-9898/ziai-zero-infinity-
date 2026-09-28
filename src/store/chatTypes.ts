@@ -23,6 +23,8 @@ export interface ChatState {
   sending:                   boolean;
   selectedModel:             string;
   setSelectedModel:          (m: string) => void;
+  modelSupportsImages:       boolean;
+  setModelSupportsImages:    (v: boolean) => void;
   send:                      (text: string, options?: { replaceUserIndex?: number }) => Promise<void>;
   stopCurrentResponse:       () => void;
   deleteConv:                (convId: string) => Promise<void>;

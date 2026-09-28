@@ -1,4 +1,5 @@
 import { Plus, X, MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useChatStore } from '../store/useChatStore';
 
 interface GuestSidebarProps {
@@ -20,14 +21,19 @@ export default function GuestSidebar({ onClose, onOpenSignIn }: GuestSidebarProp
   };
 
   return (
-    <aside className="h-full w-64 max-w-[85vw] bg-[#06060c] border-r border-white/5 flex flex-col">
+    <aside className="h-full w-64 max-w-[85vw] bg-[#05040b] border-r border-[#9b8cff]/10 flex flex-col">
       <div className="p-4 md:p-5 border-b border-white/5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+        <Link
+          to="/"
+          onClick={onClose}
+          aria-label="ZI AI home"
+          className="flex items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9b8cff]"
+        >
+          <div className="h-9 w-9 rounded-xl bg-linear-to-br from-[#a99cff] to-[#6550ed] flex items-center justify-center shadow-lg shadow-[#7764ff]/25">
             <img src="/images/logo.png" alt="Logo" className="h-7 w-7 rounded-lg" />
           </div>
           <span className="font-bold text-base md:text-lg tracking-tight text-white uppercase">ZI AI</span>
-        </div>
+        </Link>
         <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
           <X size={20} />
         </button>
@@ -36,7 +42,7 @@ export default function GuestSidebar({ onClose, onOpenSignIn }: GuestSidebarProp
       <div className="p-3">
         <button
           onClick={handleNewChat}
-          className="w-full flex items-center gap-2 px-3 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 text-purple-400 rounded-xl text-sm font-medium transition-all"
+          className="w-full flex items-center gap-2 px-3 py-2 bg-[#9b8cff]/10 hover:bg-[#9b8cff]/20 border border-[#9b8cff]/20 text-[#c1b8ff] rounded-xl text-sm font-medium transition-all"
         >
           <Plus size={16} />
           New Chat
@@ -60,7 +66,7 @@ export default function GuestSidebar({ onClose, onOpenSignIn }: GuestSidebarProp
         </button>
         <p className="text-[10px] text-slate-500 text-center mt-2">
           Already have an account?{' '}
-          <button onClick={handleSignUp} className="text-purple-400 hover:underline">
+          <button onClick={handleSignUp} className="text-[#c1b8ff] hover:underline">
             Log in
           </button>
         </p>

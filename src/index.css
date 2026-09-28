@@ -1,5 +1,50 @@
 
 @import "tailwindcss";
-/* @tailwind base;
-@tailwind components; */
-/* @tailwind utilities; */
+
+/* App-wide shiny treatment on <button>. Global rather than colocated so it
+   applies on every route — not just the ones that mount ShinyButton. */
+@import "./components/ui/shiny-buttons-global.css";
+
+:root {
+	--background: #0F0F0F;
+	--card: #1E1E22;
+	--foreground: #FFFFFF;
+	--muted: #8A8A8A;
+	--primary-blue: #1172E2;
+	--accent-blue: #4DA5FC;
+	--glow-blue: #1A4879;
+	--light-blue: #8FC1F2;
+}
+
+@theme {
+	--color-background: var(--background);
+	--color-card: var(--card);
+	--color-foreground: var(--foreground);
+	--color-muted: var(--muted);
+
+	/* Keep existing utility classes on the new blue visual system. */
+	--color-purple-300: var(--light-blue);
+	--color-purple-400: var(--accent-blue);
+	--color-purple-500: var(--accent-blue);
+	--color-purple-600: var(--primary-blue);
+	--color-purple-700: var(--glow-blue);
+	--color-violet-400: var(--accent-blue);
+	--color-violet-500: var(--accent-blue);
+	--color-violet-600: var(--primary-blue);
+	--color-indigo-300: var(--light-blue);
+	--color-indigo-400: var(--accent-blue);
+	--color-indigo-500: var(--accent-blue);
+	--color-indigo-600: var(--primary-blue);
+}
+
+html,
+body,
+#root {
+	min-height: 100%;
+	background: var(--background);
+	color: var(--foreground);
+}
+
+body {
+	margin: 0;
+}

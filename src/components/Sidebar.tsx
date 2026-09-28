@@ -140,7 +140,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
       onClick={onClose}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium ${
         activeTab === tab
-          ? 'bg-purple-600/15 text-purple-400 border border-purple-500/20'
+          ? 'border border-[#9b8cff]/25 bg-[#9b8cff]/10 text-[#c1b8ff]'
           : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
       }`}
     >
@@ -151,16 +151,21 @@ export default function Sidebar({ onClose }: SidebarProps) {
 
   return (
     <>
-      <aside className="h-full w-64 max-w-[85vw] bg-[#06060c] border-r border-white/5 flex flex-col">
+      <aside className="h-full w-64 max-w-[85vw] bg-[#05040b] border-r border-[#9b8cff]/10 flex flex-col">
 
         {/* ── Logo ── */}
         <div className="p-4 md:p-5 border-b border-white/5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+          <Link
+            to="/"
+            onClick={onClose}
+            aria-label="ZI AI home"
+            className="flex items-center gap-3 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9b8cff]"
+          >
+            <div className="h-9 w-9 rounded-xl bg-linear-to-br from-[#a99cff] to-[#6550ed] flex items-center justify-center shadow-lg shadow-[#7764ff]/25">
               <img src="/images/logo.png" alt="Logo" className="h-7 w-7 rounded-lg" />
             </div>
             <span className="font-bold text-base md:text-lg tracking-tight text-white uppercase">ZI AI</span>
-          </div>
+          </Link>
           <button onClick={onClose} className="md:hidden text-slate-400 hover:text-white">
             <X size={20} />
           </button>
@@ -209,7 +214,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
           <div className="px-3 pt-1 pb-2">
             <button
               onClick={() => { startNewChat(); onClose?.(); }}
-              className="w-full flex items-center gap-2 px-3 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 text-purple-400 rounded-xl text-sm font-medium transition-all"
+              className="w-full flex items-center gap-2 px-3 py-2 bg-[#9b8cff]/10 hover:bg-[#9b8cff]/20 border border-[#9b8cff]/20 text-[#c1b8ff] rounded-xl text-sm font-medium transition-all"
             >
               <Plus size={16} />
               New Chat
@@ -222,7 +227,7 @@ export default function Sidebar({ onClose }: SidebarProps) {
             <Link
               to="/client/image"
               onClick={onClose}
-              className="w-full flex items-center gap-2 px-3 py-2 bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 text-purple-400 rounded-xl text-sm font-medium transition-all"
+              className="w-full flex items-center gap-2 px-3 py-2 bg-[#9b8cff]/10 hover:bg-[#9b8cff]/20 border border-[#9b8cff]/20 text-[#c1b8ff] rounded-xl text-sm font-medium transition-all"
             >
               <Plus size={16} />
               New Image
@@ -234,9 +239,9 @@ export default function Sidebar({ onClose }: SidebarProps) {
         <div className="flex-1 overflow-y-auto px-3 pb-2
           [&::-webkit-scrollbar]:w-1
           [&::-webkit-scrollbar-track]:bg-transparent
-          [&::-webkit-scrollbar-thumb]:bg-purple-500/30
+          [&::-webkit-scrollbar-thumb]:bg-[#7764ff]/30
           [&::-webkit-scrollbar-thumb]:rounded-full
-          hover:[&::-webkit-scrollbar-thumb]:bg-purple-500/60">
+          hover:[&::-webkit-scrollbar-thumb]:bg-[#7764ff]/60">
 
           {/* Chat history */}
           {activeTab === 'chat' && (

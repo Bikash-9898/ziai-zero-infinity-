@@ -13,12 +13,14 @@ export function createVoiceActivityController({
 }: VoiceActivityControllerOptions = {}) {
   let state: 'idle' | 'speaking' | 'silence' = 'idle';
   let silenceStartedAt: number | null = null;
+  let silenceNotified = false;
 
   const update = (amplitude: number) => {
     const isSpeech = amplitude >= speechThreshold;
 
     if (isSpeech) {
       silenceStartedAt = null;
+      silenceNotified = false;
       if (state !== 'speaking') {
         state = 'speaking';
         onSpeechDetected?.();
@@ -26,15 +28,18 @@ export function createVoiceActivityController({
       return { state, isSpeech };
     }
 
-    if (state === 'speaking') {
-      silenceStartedAt = Date.now();
-      state = 'silence';
-      onSilenceDetected?.();
+    // Below the threshold. Only report silence once it has actually lasted
+    // `silenceMs` — firing on the first quiet frame cuts the user off
+    // mid-sentence, because amplitude dips momentarily on every pause between
+    // words, plosive and breath.
+    if (state === 'speaking' || silenceStartedAt !== null) {
+      if (silenceStartedAt === null) silenceStartedAt = Date.now();
+      if (!silenceNotified && Date.now() - silenceStartedAt >= silenceMs) {
+        silenceNotified = true;
+        state = 'silence';
+        onSilenceDetected?.();
+      }
       return { state, isSpeech };
-    }
-
-    if (silenceStartedAt && Date.now() - silenceStartedAt >= silenceMs) {
-      state = 'idle';
     }
 
     return { state, isSpeech };
@@ -44,6 +49,7 @@ export function createVoiceActivityController({
   const reset = () => {
     state = 'idle';
     silenceStartedAt = null;
+    silenceNotified = false;
   };
 
   return { update, getState, reset };

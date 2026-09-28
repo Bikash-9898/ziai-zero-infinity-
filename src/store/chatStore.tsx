@@ -26,6 +26,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const skipNextLoadRef = useRef(false);
 
   const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
+  const [modelSupportsImages, setModelSupportsImages] = useState(false);
 
   // ── Fetch conversations ──
   const fetchConversations = useCallback(async (): Promise<ConversationItem[]> => {
@@ -217,6 +218,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         sending,
         selectedModel,
         setSelectedModel,
+        modelSupportsImages,
+        setModelSupportsImages,
         send,
         stopCurrentResponse,
         deleteConv,

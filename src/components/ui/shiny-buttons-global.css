@@ -1,0 +1,137 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Shiny buttons — app-wide variant
+   Companion to shiny-button.css. Gives EVERY <button> the look of the upgrade
+   plan CTA in PlanCard: the rotating conic-gradient border sweep plus the
+   shimmer that crosses on hover.
+
+   Why this is not just `.shiny-cta` pasted onto all ~180 buttons:
+   `.shiny-cta` hardcodes `padding: 1.25rem 2.5rem`, `font-size: 1.125rem`,
+   `border-radius: 360px` and an OPAQUE fill. Most buttons here are 32px
+   icon-only controls, ghost buttons and brand-coloured payment buttons —
+   re-imposing that geometry and an opaque black fill would wreck the layout
+   and hide every existing background.
+
+   Instead the effect is split across the two pseudo-elements, which lets each
+   button keep its own size, padding, radius, fill and text colour:
+
+     ::after  -> the conic gradient border ring (masked, so the host
+                 background shows through the middle untouched)
+     ::before -> the shimmer sweep, faded with a radial mask
+
+   Note the shimmer animates the gradient ANGLE rather than rotating the
+   element. Rotating a box inside a pill-shaped button would push its corners
+   outside the host's border-radius; animating the angle keeps it clipped.
+
+   Imported from index.css (not from the component) so it applies on every
+   route, including ones that never mount ShinyButton.
+
+   Opt out per-button with  className="no-shine"  — used for the eSewa /
+   Stripe / Khalti buttons, whose brand colours must stay intact.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@layer theme, base, components, utilities;
+
+@property --shiny-ring-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@property --shiny-ring-spread {
+  syntax: "<percentage>";
+  initial-value: 4%;
+  inherits: false;
+}
+
+@layer components {
+  /* Only the positioning context and the themable vars are forced —
+     nothing about the box model changes. */
+  button:not(.shiny-cta):not(.no-shine) {
+    position: relative;
+    --shiny-ring-color: #4da5fc;
+    --shiny-ring-color-soft: #b7d7f6;
+    --shiny-sheen-color: #4da5fc;
+  }
+
+  /* ── Border ring ──────────────────────────────────────────────────────── */
+  button:not(.shiny-cta):not(.no-shine)::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--shiny-ring-angle),
+      transparent,
+      var(--shiny-ring-color) var(--shiny-ring-spread),
+      var(--shiny-ring-color-soft) calc(var(--shiny-ring-spread) * 2),
+      var(--shiny-ring-color) calc(var(--shiny-ring-spread) * 3),
+      transparent calc(var(--shiny-ring-spread) * 4)
+    );
+    /* Punch the middle out so only a 1px edge ring survives. `exclude` is the
+       standard spelling; `xor` is the legacy WebKit equivalent. */
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    opacity: 0.5;
+    /* Idle is deliberately STATIC. Animating ~180 conic gradients at once is a
+       real compositing cost, so the sweep only runs on interaction. */
+    animation: shiny-ring-spin 3s linear infinite paused;
+    transition: opacity 400ms ease;
+  }
+
+  /* ── Shimmer sweep ────────────────────────────────────────────────────── */
+  button:not(.shiny-cta):not(.no-shine)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+      var(--shiny-ring-angle),
+      transparent 35%,
+      var(--shiny-sheen-color) 50%,
+      transparent 65%
+    );
+    /* Fade toward the edges so the sheen never hard-clips on a pill or a
+       large-radius button. */
+    -webkit-mask-image: radial-gradient(120% 120% at 50% 50%, #000 35%, transparent 78%);
+    mask-image: radial-gradient(120% 120% at 50% 50%, #000 35%, transparent 78%);
+    opacity: 0;
+    transition: opacity 500ms ease;
+  }
+
+  /* ── Interaction: ring blooms, sheen crosses ─────────────────────────── */
+  button:not(.shiny-cta):not(.no-shine):is(:hover, :focus-visible)::after {
+    opacity: 1;
+    --shiny-ring-spread: 22%;
+    animation-play-state: running;
+  }
+
+  button:not(.shiny-cta):not(.no-shine):is(:hover, :focus-visible)::before {
+    opacity: 0.28;
+  }
+
+  /* ── Inert controls ───────────────────────────────────────────────────── */
+  /* No effect on a disabled button — motion there just reads as "broken". */
+  button:disabled::before,
+  button:disabled::after,
+  button[aria-disabled="true"]::before,
+  button[aria-disabled="true"]::after {
+    content: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    button:not(.shiny-cta):not(.no-shine)::after {
+      animation: none;
+    }
+  }
+}
+
+@keyframes shiny-ring-spin {
+  to {
+    --shiny-ring-angle: 360deg;
+  }
+}

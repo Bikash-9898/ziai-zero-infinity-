@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { getLibraryItems, uploadLibraryItems, deleteLibraryItem, LibraryItem } from '@/api/library';
 import { toast } from 'react-hot-toast';
+import { ShinyButton } from '@/components/ui/shiny-button';
 
 const categories = [
   { id: 'all', label: 'All' },
@@ -143,14 +144,15 @@ export default function LibraryPage() {
                 <span className="text-xs uppercase tracking-[0.3em] text-slate-400">Items</span>
                 <span className="text-sm font-semibold text-white">{items.length}</span>
               </div>
-              <button
+              <ShinyButton
                 type="button"
                 onClick={handleUploadSelect}
                 disabled={uploading}
-                className="inline-flex items-center gap-2 rounded-2xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
+                highlightColor="#a78bfa"
+                className="inline-flex items-center gap-2 rounded-2xl text-sm font-semibold text-white shadow-lg shadow-purple-500/20 [--shiny-cta-padding:12px_16px] [--shiny-cta-font-size:14px] [--shiny-cta-bg:#7c3aed]"
               >
                 <Plus size={16} /> {uploading ? 'Uploading...' : 'Upload files'}
-              </button>
+              </ShinyButton>
             </div>
           </div>
 

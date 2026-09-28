@@ -6,6 +6,7 @@ import { useAuth } from "@/context/useAuth";
 import UsageBar from "../components/billing/UsageBar";
 import WalletTopUpModal from "../components/billing/WalletTopUpModal";
 import { useUsage, useBillingStatus, useUsageSummary, useWallet, daysUntil, formatTokens } from "../hooks/useUsage";
+import { ShinyButton } from "@/components/ui/shiny-button";
 
 const PLAN_COLORS: Record<string, string> = {
   free:       "#64748b",
@@ -107,30 +108,34 @@ export default function BillingDashboard() {
 
         {/* Quick actions */}
         <div className="flex gap-3 flex-wrap">
-          <button
+          <ShinyButton
             onClick={() => setShowTopUp(true)}
-            className="flex items-center gap-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white text-[13px] font-semibold transition-colors"
+            highlightColor="#34d399"
+            className="inline-flex items-center gap-2 rounded-xl text-[13px] font-semibold [--shiny-cta-padding:10px_16px] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#059669]"
           >
             <span>+</span> Add Funds
-          </button>
-          <button
+          </ShinyButton>
+          <ShinyButton
             onClick={() => navigate('/plans')}
-            className="flex items-center gap-2 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white text-[13px] font-semibold transition-colors"
+            highlightColor="#818cf8"
+            className="inline-flex items-center gap-2 rounded-xl text-[13px] font-semibold [--shiny-cta-padding:10px_16px] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#4f46e5]"
           >
             <span>⬡</span> Upgrade Plan
-          </button>
-          <button
+          </ShinyButton>
+          <ShinyButton
             onClick={() => navigate('/billing')}
-            className="flex items-center gap-2 py-2.5 px-4 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 rounded-xl text-slate-400 hover:text-slate-100 text-[13px] font-semibold transition-all"
+            highlightColor="#60a5fa"
+            className="inline-flex items-center gap-2 rounded-xl text-[13px] font-semibold text-slate-100 [--shiny-cta-padding:10px_16px] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#0f172a]"
           >
             <span>◈</span> Manage Billing
-          </button>
-          <button
+          </ShinyButton>
+          <ShinyButton
             onClick={() => navigate('/usage')}
-            className="flex items-center gap-2 py-2.5 px-4 bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 rounded-xl text-slate-400 hover:text-slate-100 text-[13px] font-semibold transition-all"
+            highlightColor="#60a5fa"
+            className="inline-flex items-center gap-2 rounded-xl text-[13px] font-semibold text-slate-100 [--shiny-cta-padding:10px_16px] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#0f172a]"
           >
             <span>↗</span> View Full Usage
-          </button>
+          </ShinyButton>
         </div>
 
         {/* Usage bars */}

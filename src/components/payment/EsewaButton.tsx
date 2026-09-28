@@ -1,6 +1,8 @@
 // src/components/payment/EsewaButton.tsx
 import { useState } from 'react';
 import { initiateEsewa } from '../../api/billing';
+import { ShinyButton } from '@/components/ui/shiny-button';
+import { getPlanAccent } from '@/components/billing/planAccents';
 
 interface EsewaButtonProps {
   plan:   string;
@@ -45,22 +47,24 @@ export default function EsewaButton({ plan, userId }: EsewaButtonProps) {
 
   return (
     <div>
-      <button
+      <ShinyButton
         onClick={handlePay}
         disabled={loading}
-        className="w-full flex items-center justify-center gap-2.5 px-5 py-3 bg-[#60bb46] hover:brightness-110 text-white text-[15px] font-bold border-none rounded-xl cursor-pointer transition-[filter] duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+        aria-busy={loading}
+        highlightColor={getPlanAccent(plan)}
+        className="w-full rounded-[10px] text-[13px] font-bold [--shiny-cta-padding:11px_0] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#0f172a]"
       >
         {loading ? (
           <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
         ) : (
-          <>
+          <span className="inline-flex items-center justify-center gap-2.5">
             <span className="w-6 h-6 rounded-md bg-white/25 flex items-center justify-center text-sm font-black shrink-0">
               e
             </span>
             Pay with eSewa
-          </>
+          </span>
         )}
-      </button>
+      </ShinyButton>
 
       {error && (
         <p className="text-xs text-red-500 text-center mt-2 mb-0">{error}</p>

@@ -1,5 +1,7 @@
 import { Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import Home from './pages/home';
+import ServicesPage from './pages/ServicesPage';
+import ContactPage from './pages/ContactPage';
 // import SignIn from './pages/signin';
 import AdminDashboard from './pages/AdminDashboard';
 import ClientDashboard from './pages/ClientDashboard';
@@ -32,6 +34,9 @@ const App = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      {/* Public marketing pages — linked from the shared SiteNavbar. */}
+      <Route path="/services" element={<ServicesPage />} />
+      <Route path="/contact"  element={<ContactPage />} />
       {/* Standalone guest chat landing — minimal sidebar promoting sign-up.
           /client/chat (via GuestGate) remains the full-app guest experience;
           this is a lighter-weight entry point (e.g. from a "Continue as
@@ -57,9 +62,15 @@ const App = () => {
         </Route>
       </Route>
 
+      {/* Billing dashboard uses the same client shell and sidebar. */}
+      <Route path="/billingDashboard" element={<ClientDashboard />}>
+        <Route element={<ProtectedLayout />}>
+          <Route index element={<Dashboard />} />
+        </Route>
+      </Route>
+
       <Route element={<ProtectedLayout />}>
         <Route path="/billing" element={<BillingPage />} />
-        <Route path="/billingDashboard" element={<Dashboard />} />
         <Route path="/usage" element={<UsageStats />} />
         <Route path="/plans" element={<PlansPage />} />
       </Route>

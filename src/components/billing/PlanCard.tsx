@@ -1,12 +1,15 @@
 // src/components/billing/PlanCard.tsx
 
 import type { PlanComparison } from "@/api/billing";
+import { ShinyButton } from "@/components/ui/shiny-button";
+import { getPlanAccent } from "@/components/billing/planAccents";
+import { cn } from "@/lib/utils";
 
 const PLAN_META: Record<string, { color: string; glow: string; icon: string; tagline: string }> = {
-  free:       { color: "#64748b", glow: "#64748b22", icon: "◇", tagline: "Get started for free"        },
-  basic:      { color: "#06b6d4", glow: "#06b6d422", icon: "◈", tagline: "For individuals & hobbyists" },
-  pro:        { color: "#6366f1", glow: "#6366f133", icon: "⬡", tagline: "For power users & teams"     },
-  enterprise: { color: "#f59e0b", glow: "#f59e0b22", icon: "✦", tagline: "Unlimited everything"        },
+  free:       { color: getPlanAccent("free"), glow: "#64748b22", icon: "◇", tagline: "Get started for free" },
+  basic:      { color: getPlanAccent("basic"), glow: "#06b6d422", icon: "◈", tagline: "For individuals & hobbyists" },
+  pro:        { color: getPlanAccent("pro"), glow: "#6366f133", icon: "⬡", tagline: "For power users & teams" },
+  enterprise: { color: getPlanAccent("enterprise"), glow: "#f59e0b22", icon: "✦", tagline: "Unlimited everything" },
 };
 
 function fmt(n: number, suffix = ""): string {
@@ -106,23 +109,22 @@ export default function PlanCard({ plan, onSelect, loading }: PlanCardProps) {
       </div>
 
       {/* CTA */}
-      <button
-        disabled={isCurrent || loading}
-        onClick={() => !isCurrent && onSelect(plan)}
-        className="w-full py-3 rounded-[10px] text-[13px] font-bold tracking-[0.04em] border-none transition-all duration-150"
-        style={{
-          cursor:     isCurrent || loading ? "default" : "pointer",
-          background: isCurrent
-            ? "#1e293b"
-            : plan.action === "upgrade"
-              ? `linear-gradient(135deg, ${meta.color}, ${meta.color}cc)`
-              : "#1e293b",
-          color:      isCurrent ? "#475569" : plan.action === "upgrade" ? "#fff" : meta.color,
-          boxShadow:  (!isCurrent && plan.action === "upgrade") ? `0 4px 16px ${meta.glow}` : "none",
-        }}
+      <ShinyButton
+        disabled={isCurrent}
+        aria-busy={loading}
+        highlightColor={meta.color}
+        onClick={() => !isCurrent && !loading && onSelect(plan)}
+        className={cn(
+          "w-full rounded-[10px] text-[13px] font-bold tracking-[0.04em]",
+          "[--shiny-cta-padding:11px_0]",
+          // Blend the button fill into the card and sweep the border in the
+          // plan's accent. Skipped on the current plan, where the
+          // :disabled rule in shiny-button.css owns the palette.
+          !isCurrent && "[--shiny-cta-bg:#0f172a]",
+        )}
       >
         {loading ? "Processing…" : btnLabel}
-      </button>
+      </ShinyButton>
     </div>
   );
 }

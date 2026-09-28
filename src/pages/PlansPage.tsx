@@ -94,7 +94,7 @@
 // src/pages/PlansPage.tsx
 // Standalone plan selection page — uses usePlanUpgrade hook directly.
 // No popup modal — the confirm/payment steps render inline on the page.
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';  
 import { useAuth } from '@/context/useAuth';
 import { useBillingStatus } from '@/hooks/useUsage';
 import { usePlanUpgrade } from '@/hooks/usePlanUpgrade';
@@ -103,6 +103,8 @@ import KhaltiButton from '@/components/payment/Khaltibutton';
 import { ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StripeButton from '@/components/payment/StripeButton';
+import { ShinyButton } from '@/components/ui/shiny-button';
+import { getPlanAccent } from '@/components/billing/planAccents';
 
 export default function PlansPage() {
   const { user, loading: authLoading } = useAuth();
@@ -137,24 +139,33 @@ export default function PlansPage() {
 
         {/* Back button when in a sub-step */}
         {step !== 'plans' && step !== 'processing' && (
-          <button
+          <ShinyButton
             onClick={goBackToPlans}
-            className="flex items-center gap-2 text-slate-500 hover:text-slate-300 text-sm transition-colors self-start"
+            highlightColor={getPlanAccent('basic')}
+            className="self-start rounded-[10px] text-[13px] font-bold [--shiny-cta-padding:8px_12px] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#0f172a]"
           >
-            <ArrowLeft size={15} /> Back to plans
-          </button>
+            <span className="inline-flex items-center gap-2"><ArrowLeft size={15} /> Back to plans</span>
+          </ShinyButton>
         )}
 
         {/* ── Plans grid ── */}
         {step === 'plans' && (
           <>
+            <ShinyButton
+              onClick={() => navigate(-1)}
+              highlightColor={getPlanAccent('basic')}
+              className="self-start rounded-[10px] text-[13px] font-bold [--shiny-cta-padding:8px_12px] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#0f172a]"
+            >
+              <span className="inline-flex items-center gap-2"><ArrowLeft size={15} /> Back to plan</span>
+            </ShinyButton>
+
             <div className="text-center">
-              <div className="inline-flex items-center gap-2 mb-5 px-4 py-1 text-xs font-medium text-purple-300 border border-purple-500/30 bg-purple-500/10 rounded-full">
+              {/* <div className="inline-flex items-center gap-2 mb-5 px-4 py-1 text-xs font-medium text-purple-300 border border-purple-500/30 bg-purple-500/10 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
-                Choose a Plan
-              </div>
+              
+              </div> */}
               <h1 className="text-[36px] md:text-[48px] font-black tracking-[-0.04em] mb-3 mt-0">
-                Plans that grow with you
+                Plans that grow works best for your Business
               </h1>
               <p className="text-slate-500 max-w-md mx-auto text-sm leading-relaxed">
                 All prices in Nepali Rupees (NPR) · Billed monthly · No hidden fees
@@ -207,7 +218,7 @@ export default function PlansPage() {
             subtitle="Your current plan stays active until the billing period ends."
             highlights={['Access continues until period end', 'New limits apply from next cycle', 'No refunds for unused time']}
             confirmLabel={`Confirm Downgrade to ${cap(selected.plan)}`}
-            confirmColor="#f59e0b"
+            confirmColor={getPlanAccent(selected.plan)}
             onConfirm={scheduleDowngrade}
             loading={actionLoading}
             error={error}
@@ -240,20 +251,22 @@ export default function PlansPage() {
             {error && <p className="text-red-500 text-[13px]">{error}</p>}
 
             <div className="flex flex-col gap-3">
-              <button
+              <ShinyButton
                 onClick={initiatePayment}
                 disabled={actionLoading}
-                className="w-full py-3.5 rounded-xl bg-[#60BB46] border-none cursor-pointer flex items-center justify-center gap-2.5 font-bold text-[15px] text-white transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
+                aria-busy={actionLoading}
+                highlightColor={getPlanAccent(selected.plan)}
+                className="w-full rounded-[10px] text-[13px] font-bold [--shiny-cta-padding:11px_0] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#0f172a]"
               >
                 {actionLoading ? (
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
-                  <>
-                    <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-5 brightness-0 invert" onError={e => (e.currentTarget.style.display = 'none')} />
+                  <span className="inline-flex items-center justify-center gap-2.5">
+                    <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-6 w-auto shrink-0 object-contain" onError={e => (e.currentTarget.style.display = 'none')} />
                     Pay with eSewa
-                  </>
+                  </span>
                 )}
-              </button>
+              </ShinyButton>
 
               <KhaltiButton plan={selected.plan} userId={userId} />
               <StripeButton plan={selected.plan} userId={userId} />
@@ -304,14 +317,15 @@ function ConfirmSection({ title, subtitle, highlights, confirmLabel, confirmColo
         ))}
       </ul>
       {error && <p className="text-red-500 text-[13px]">{error}</p>}
-      <button
+      <ShinyButton
         onClick={onConfirm}
         disabled={loading}
-        className="py-3 rounded-[10px] border-none text-white font-bold text-sm cursor-pointer flex items-center justify-center gap-2 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed"
-        style={{ background: `linear-gradient(135deg, ${confirmColor}, ${confirmColor}bb)` }}
+        aria-busy={loading}
+        highlightColor={confirmColor}
+        className="w-full rounded-[10px] text-[13px] font-bold [--shiny-cta-padding:11px_0] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#0f172a]"
       >
         {loading ? <Loader2 size={16} className="animate-spin" /> : confirmLabel}
-      </button>
+      </ShinyButton>
     </div>
   );
 }

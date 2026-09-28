@@ -1,7 +1,6 @@
-// src/pages/AdminDashboard.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, PanelRight, X, CreditCard, LayoutDashboardIcon, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, PanelRight, X, CreditCard, LayoutDashboardIcon, Settings, Database, Brain, Image as ImageIcon } from 'lucide-react';
 import type { AdminUserRow } from '@/types/types';
 import UserTable from '@/components/UserTable';
 import AdminOverview from '@/components/AdminOverview';
@@ -12,6 +11,7 @@ import AdminGuestModelSettings from '@/components/AdminGuestModelSettings';
 import AdminModelRegistry from '@/components/AdminModelRegistry';
 import AdminImageModelRegistry from '@/components/AdminImageModelRegistry';
 import AdminPricingSettings from '@/components/AdminPricingSettings';
+import AdminApiKeyDatabase from '@/components/AdminApiKeyDatabase';
 import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 
 const AdminDashboard = () => {
@@ -22,6 +22,7 @@ const AdminDashboard = () => {
   const [loading, setLoading]               = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [quota, setQuota] = useState<{ used: number; max: number }>({ used: 0, max: 10_000_000 });
+  const [modelsTab, setModelsTab]           = useState<'ai' | 'image'>('ai');
 
   useEffect(() => {
     // /admin/users returns each user enriched with token usage, cost,
@@ -88,7 +89,9 @@ const AdminDashboard = () => {
         <nav className="flex-1 px-4 space-y-2">
           <NavItem icon={<LayoutDashboard size={20} />} label="Overview" active={activeView === 'overview'} onClick={() => setActiveView('overview')} />
           <NavItem icon={<Users size={20} />}           label="Users"    active={activeView === 'users'}    onClick={() => setActiveView('users')} />
+          <NavItem icon={<Brain size={20} />}            label="Models"   active={activeView === 'models'}   onClick={() => setActiveView('models')} />
           <NavItem icon={<CreditCard size={20} />}      label="Billing"  active={activeView === 'billing'}  onClick={() => setActiveView('billing')} />
+          <NavItem icon={<Database size={20} />}        label="Database" active={activeView === 'database'} onClick={() => setActiveView('database')} />
           <NavItem icon={<Settings size={20} />}        label="Settings" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
         </nav>
         <div className="p-4 border-t border-slate-800">
@@ -106,7 +109,7 @@ const AdminDashboard = () => {
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="shrink-0 px-4 md:px-10 pt-4 md:pt-8 pb-4 flex justify-between items-center">
           <h1 className="text-xl md:text-3xl font-bold capitalize tracking-tight">
-            {activeView === 'billing' ? 'Billing Dashboard' : activeView.replace('-', ' ')}
+            {activeView === 'billing' ? 'Billing Dashboard' : activeView === 'database' ? 'Database & API Keys' : activeView === 'models' ? 'Models Management' : activeView.replace('-', ' ')}
           </h1>
           <div className="flex items-center space-x-2 md:space-x-4">
             <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-medium border border-emerald-500/20 hidden sm:block">
@@ -128,11 +131,41 @@ const AdminDashboard = () => {
             {activeView === 'users'    && <UserTable users={users} />}
             {activeView === 'overview' && <AdminOverview />}
             {activeView === 'billing'  && <AdminBillingView />}
+            {activeView === 'database' && <AdminApiKeyDatabase />}
+            {activeView === 'models' && (
+              <div className="flex flex-col gap-6">
+                {/* Tab switcher */}
+                <div className="flex items-center gap-1 p-1 bg-[#0d1224] border border-slate-800 rounded-xl w-fit">
+                  <button
+                    onClick={() => setModelsTab('ai')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      modelsTab === 'ai'
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <Brain size={14} />
+                    AI Models
+                  </button>
+                  <button
+                    onClick={() => setModelsTab('image')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      modelsTab === 'image'
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <ImageIcon size={14} />
+                    Image Models
+                  </button>
+                </div>
+                {/* Tab content */}
+                {modelsTab === 'ai' ? <AdminModelRegistry /> : <AdminImageModelRegistry />}
+              </div>
+            )}
             {activeView === 'settings' && (
               <div className="flex flex-col gap-6">
                 <AdminPricingSettings />
-                <AdminModelRegistry />
-                <AdminImageModelRegistry />
                 <AdminGuestModelSettings />
               </div>
             )}
@@ -194,7 +227,9 @@ const AdminDashboard = () => {
       <nav className="md:hidden fixed bottom-0 inset-x-0 flex bg-[#0d1224] border-t border-slate-800 z-30">
         <MobileNavItem icon={<LayoutDashboard size={20} />} label="Overview" active={activeView === 'overview'} onClick={() => setActiveView('overview')} />
         <MobileNavItem icon={<Users size={20} />}           label="Users"    active={activeView === 'users'}    onClick={() => setActiveView('users')} />
+        <MobileNavItem icon={<Brain size={20} />}            label="Models"   active={activeView === 'models'}   onClick={() => setActiveView('models')} />
         <MobileNavItem icon={<CreditCard size={20} />}      label="Billing"  active={activeView === 'billing'}  onClick={() => setActiveView('billing')} />
+        <MobileNavItem icon={<Database size={20} />}        label="Database" active={activeView === 'database'} onClick={() => setActiveView('database')} />
         <MobileNavItem icon={<Settings size={20} />}        label="Settings" active={activeView === 'settings'} onClick={() => setActiveView('settings')} />
         <MobileNavItem icon={<LogOut size={20} />}          label="Logout"   active={false}                     onClick={handleLogout} />
       </nav>

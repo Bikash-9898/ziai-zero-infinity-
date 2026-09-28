@@ -1,9 +1,10 @@
-// src/components/ChatWindow.tsx
 import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useChatStore } from '@/store/useChatStore';
 import { useAuth } from '@/context/useAuth';
-import { Sparkles, Loader2, Copy, Check, Edit3 } from 'lucide-react';
+import { BoltStyleChat } from '@/components/ui/bolt-style-chat';
+import { Sparkles, Loader2, Copy, Check, Edit3, Download, Maximize2, X } from 'lucide-react';
+import { uploadFiles } from '@/api/upload';
 import type { Message } from '@/store/chatTypes';
 
 const linkifyUrls = (text: string) => {
@@ -38,20 +39,10 @@ export default function ChatWindow() {
   const [editDraft, setEditDraft] = useState('');
   const [activeCodeCopyId, setActiveCodeCopyId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState('');
+  const [previewImage, setPreviewImage] = useState<{ src: string; alt?: string } | null>(null);
+  const [attaching, setAttaching] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [refreshPrompt] = useState(() => {
-    const username = user?.username ? user.username : 'there';
-    const prompts = [
-      'Ready when you are',
-      "What's on the agenda today?",
-      `Good to see you, ${username}`,
-      `How can I help, ${username}?`,
-      'Where should we begin?',
-    ];
-    return prompts[Math.floor(Math.random() * prompts.length)];
-  });
-
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, sending]);
@@ -81,6 +72,34 @@ export default function ChatWindow() {
     toastTimer.current = setTimeout(() => {
       setToastMessage('');
     }, 2000);
+  };
+
+  /**
+   * Attachments from the empty-state hero. MessageInput isn't mounted while
+   * messages.length === 0, so this is the only way to attach on a first
+   * message. Uploads go through the same /library/upload endpoint and are
+   * encoded as markdown links appended to the text, exactly like
+   * MessageInput.handleSend, so the backend sees one consistent message shape.
+   */
+  const handleAttachFromEmptyState = async (files: File[], message: string) => {
+    setAttaching(true);
+    try {
+      const uploaded = await uploadFiles(files);
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+      const links = uploaded.files
+        .map((f) => {
+          const fullUrl = f.url?.startsWith('http') ? f.url : `${backendUrl}${f.url}`;
+          return f.mime_type?.startsWith('image/')
+            ? `\n\n![Attached: ${f.original_name}](${fullUrl})`
+            : `\n\n[Attached: ${f.original_name}](${fullUrl})`;
+        })
+        .join('');
+      await send((message.trim() || 'Sent an attachment') + links);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setAttaching(false);
+    }
   };
 
   const handleCopy = async (text: string, idx: number) => {
@@ -142,7 +161,7 @@ export default function ChatWindow() {
         href={href}
         target="_blank"
         rel="noreferrer noopener"
-        className="text-purple-300 underline transition hover:text-purple-100"
+        className="text-[#c1b8ff] underline transition hover:text-white"
         {...props}
       >
         {children}
@@ -190,12 +209,56 @@ export default function ChatWindow() {
       );
     },
     img: ({ src, alt, ...props }: any) => (
-      <img 
-        src={src} 
-        alt={alt} 
-        className="max-w-full rounded-xl mt-4 mb-2 shadow-lg shadow-black/20 object-contain max-h-75" 
-        {...props} 
-      />
+      <div className="group relative my-4 rounded-2xl overflow-hidden border border-white/10 max-w-md bg-black/40 shadow-xl">
+        <img 
+          src={src} 
+          alt={alt} 
+          className="w-full object-cover max-h-96 cursor-pointer transition-transform duration-300 group-hover:scale-[1.02]" 
+          onClick={() => setPreviewImage({ src, alt })}
+          {...props} 
+        />
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-black/70 backdrop-blur-md p-1.5 rounded-xl border border-white/10 z-10">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewImage({ src, alt });
+            }}
+            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/20 transition-colors"
+            title="Expand view"
+            aria-label="Expand image view"
+          >
+            <Maximize2 size={15} />
+          </button>
+          <button
+            type="button"
+            onClick={async (e) => {
+              e.stopPropagation();
+              try {
+                let downloadUrl = src;
+                if (!src.startsWith('data:')) {
+                  const res = await fetch(src);
+                  const blob = await res.blob();
+                  downloadUrl = URL.createObjectURL(blob);
+                }
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `generated-${Date.now()}.png`;
+                a.click();
+                if (!src.startsWith('data:')) URL.revokeObjectURL(downloadUrl);
+                showToast('Image downloaded');
+              } catch {
+                showToast('Failed to download image');
+              }
+            }}
+            className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/20 transition-colors"
+            title="Download image"
+            aria-label="Download image"
+          >
+            <Download size={15} />
+          </button>
+        </div>
+      </div>
     ),
   };
 
@@ -203,7 +266,7 @@ export default function ChatWindow() {
   if (loadingMessages) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 size={28} className="text-purple-500 animate-spin" />
+        <Loader2 size={28} className="text-[#9b8cff] animate-spin" />
       </div>
     );
   }
@@ -211,19 +274,17 @@ export default function ChatWindow() {
   // Empty state — shown before any messages
   if (messages.length === 0 && !sending) {
     return (
-      <div className="flex-1 flex items-center justify-center px-4 min-h-[calc(100vh-5rem)]">
-        <div className="w-full max-w-2xl rounded-4xl border border-white/10 bg-[#0b0b1a]/90 p-8 shadow-[0_0_60px_rgba(15,23,42,0.55)]">
-          <div className="mx-auto text-center">
-            <div className="flex items-center justify-center w-14 h-14 rounded-3xl bg-purple-600/15 mx-auto mb-6">
-              <Sparkles size={24} className="text-purple-300" />
-            </div>
-            <h1 className="text-3xl font-semibold text-white mb-3">{refreshPrompt}</h1>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Start a new chat and I’ll help you with your next plan, task, or idea.
-            </p>
-          </div>
-        </div>
-      </div>
+      <BoltStyleChat
+        title="What will you"
+        subtitle="Create stunning apps & websites by chatting with AI."
+        onSend={(message) => {
+          if (message.trim()) {
+            void send(message);
+          }
+        }}
+        attaching={attaching}
+        onAttach={handleAttachFromEmptyState}
+      />
     );
   }
 
@@ -237,14 +298,14 @@ export default function ChatWindow() {
           const isCopied = activeCopyIndex === idx;
           const isEditing = editingIndex === idx;
           const bubbleClasses = isAssistant
-            ? 'bg-slate-800 border border-white/10 text-slate-100'
-            : 'bg-gradient-to-r from-purple-700 to-violet-600 text-white';
+            ? 'bg-[#100d20]/90 border border-[#9b8cff]/15 text-slate-100'
+            : 'bg-gradient-to-r from-[#4938b8] to-[#7966f4] text-white';
           const textPadding = isEditing ? 'pl-4 pr-4 py-4' : 'pl-4 pr-24 py-4';
 
           return (
             <div key={idx} className={`flex gap-3 items-start ${isAssistant ? '' : 'justify-end'}`}>
               {isAssistant && (
-                <div className="w-9 h-9 rounded-xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center shrink-0 border border-purple-400/30 shadow-lg shadow-purple-500/10">
+                <div className="w-9 h-9 rounded-xl bg-linear-to-br from-[#a99cff] to-[#6550ed] flex items-center justify-center shrink-0 border border-[#c1b8ff]/30 shadow-lg shadow-[#7764ff]/20">
                   <Sparkles size={16} className="text-white" />
                 </div>
               )}
@@ -292,7 +353,7 @@ export default function ChatWindow() {
                           type="button"
                           onClick={() => void saveEdit(idx)}
                           disabled={!editDraft.trim() || sending}
-                          className="rounded-lg bg-purple-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="rounded-lg bg-[#6550ed] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#7764ff] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           Save & resend
                         </button>
@@ -322,14 +383,14 @@ export default function ChatWindow() {
         {/* Typing indicator */}
         {sending && (
           <div className="flex gap-3 items-start">
-            <div className="w-9 h-9 rounded-xl bg-linear-to-br from-purple-600 to-blue-500 flex items-center justify-center shrink-0 border border-purple-400/30">
+            <div className="w-9 h-9 rounded-xl bg-linear-to-br from-[#a99cff] to-[#6550ed] flex items-center justify-center shrink-0 border border-[#c1b8ff]/30">
               <Sparkles size={16} className="text-white" />
             </div>
             <div className="bg-white/5 border border-white/10 p-4 rounded-2xl rounded-tl-none shadow-xl">
               <div className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:0ms]" />
-                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:150ms]" />
-                <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:300ms]" />
+                <span className="w-1.5 h-1.5 bg-[#c1b8ff] rounded-full animate-bounce [animation-delay:0ms]" />
+                <span className="w-1.5 h-1.5 bg-[#c1b8ff] rounded-full animate-bounce [animation-delay:150ms]" />
+                <span className="w-1.5 h-1.5 bg-[#c1b8ff] rounded-full animate-bounce [animation-delay:300ms]" />
               </div>
             </div>
           </div>
@@ -341,6 +402,54 @@ export default function ChatWindow() {
       {toastMessage && (
         <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-full bg-slate-900/95 px-4 py-2 text-sm text-slate-100 shadow-xl shadow-black/40 border border-white/10">
           {toastMessage}
+        </div>
+      )}
+
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="relative max-w-5xl w-full rounded-3xl overflow-hidden border border-slate-800 bg-slate-950 p-3 shadow-2xl flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/70 text-slate-300 hover:text-white hover:bg-black/90 border border-white/10 transition-all"
+              aria-label="Close preview"
+            >
+              <X size={20} />
+            </button>
+            <img src={previewImage.src} alt={previewImage.alt || 'Preview'} className="w-full max-h-[80vh] object-contain rounded-2xl bg-black" />
+            <div className="w-full p-3 flex items-center justify-between gap-4">
+              <p className="text-xs text-slate-300 font-mono truncate">{previewImage.alt || 'Generated Image'}</p>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    let downloadUrl = previewImage.src;
+                    if (!previewImage.src.startsWith('data:')) {
+                      const res = await fetch(previewImage.src);
+                      const blob = await res.blob();
+                      downloadUrl = URL.createObjectURL(blob);
+                    }
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = `generated-${Date.now()}.png`;
+                    a.click();
+                    if (!previewImage.src.startsWith('data:')) URL.revokeObjectURL(downloadUrl);
+                    showToast('Image downloaded');
+                  } catch {
+                    showToast('Failed to download image');
+                  }
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-[#6550ed] px-4 py-2 text-xs font-medium text-white hover:bg-[#7764ff] transition-all shrink-0 shadow-lg shadow-[#7764ff]/20"
+              >
+                <Download size={14} /> Download Image
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

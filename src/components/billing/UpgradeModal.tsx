@@ -6,6 +6,8 @@ import { type PlanComparison } from '@/api/billing';
 import PlanCard from './PlanCard';
 import KhaltiButton from '../payment/Khaltibutton';
 import StripeButton from '../payment/StripeButton';
+import { ShinyButton } from '@/components/ui/shiny-button';
+import { getPlanAccent } from '@/components/billing/planAccents';
 
 interface UpgradeModalProps {
   userId:       string;
@@ -170,20 +172,22 @@ function PaymentStep({ selected, userId, error, actionLoading, onPay }: {
       {error && <p className="text-red-500 text-[13px]">{error}</p>}
 
       <div className="flex flex-col gap-3">
-        <button
+        <ShinyButton
           onClick={onPay}
           disabled={actionLoading}
-          className="w-full py-3.5 rounded-xl bg-[#60BB46] border-none cursor-pointer flex items-center justify-center gap-2.5 font-bold text-[15px] text-white transition-opacity duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
+          aria-busy={actionLoading}
+          highlightColor={getPlanAccent(selected.plan)}
+          className="w-full rounded-[10px] text-[13px] font-bold [--shiny-cta-padding:11px_0] [--shiny-cta-font-size:13px] [--shiny-cta-bg:#0f172a]"
         >
           {actionLoading ? (
             <Loader2 size={18} className="animate-spin" />
           ) : (
-            <>
-              <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-5 brightness-0 invert" onError={e => (e.currentTarget.style.display = 'none')} />
+            <span className="inline-flex items-center justify-center gap-2.5">
+              <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-6 w-auto shrink-0 object-contain" onError={e => (e.currentTarget.style.display = 'none')} />
               Pay with eSewa
-            </>
+            </span>
           )}
-        </button>
+        </ShinyButton>
 
         <StripeButton plan={selected.plan} userId={userId} />
         <KhaltiButton plan={selected.plan} userId={userId} />

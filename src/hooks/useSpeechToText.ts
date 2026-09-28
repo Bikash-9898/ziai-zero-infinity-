@@ -44,6 +44,11 @@ export function useSpeechToText({
   const silenceMsRef = useRef(silenceMs);
   const onTranscriptChangeRef = useRef(onTranscriptChange);
   const onFinalTranscriptRef = useRef(onFinalTranscript);
+  // Bumped by every stop/pause/cancel/unmount. `startRecognition` awaits
+  // getUserMedia, so without this a stop issued while the permission prompt is
+  // still open gets overwritten the moment the stream resolves — leaving the
+  // mic live and recording while the UI already shows 'idle'.
+  const sessionEpochRef = useRef(0);
 
   continuousListenRef.current = continuousListen;
   silenceMsRef.current = silenceMs;
@@ -151,9 +156,6 @@ export function useSpeechToText({
           case 'permission-denied':
             setErrorMsg('Microphone permission denied. Please allow microphone access in your browser settings.');
             break;
-          case 'not-allowed':
-            setErrorMsg('Microphone permission denied. Please allow microphone access in your browser settings.');
-            break;
           default:
             setErrorMsg(`Speech recognition error: ${event.error}. Please try again.`);
         }
@@ -248,7 +250,11 @@ export function useSpeechToText({
 
         const controller = createVoiceActivityController({
           speechThreshold: 0.16,
-          silenceMs: 900,
+          // Single source of truth for "how long counts as a pause". This was
+          // hardcoded to 900ms while the recognition silence timer uses
+          // silenceMs (8s default) — the VAD always won, so dictation was cut
+          // off far sooner than the rest of the hook expected.
+          silenceMs: silenceMsRef.current,
           onSpeechDetected: () => {
             if (pausedRef.current || !activeStreamRef.current) return;
             if (statusRef.current === 'listening' || statusRef.current === 'processing') return;
@@ -312,6 +318,7 @@ export function useSpeechToText({
           setStatus('processing');
         }
 
+        const epoch = sessionEpochRef.current;
         let micStream = existingStream ?? null;
         if (!micStream) {
           micStream = await navigator.mediaDevices.getUserMedia({
@@ -321,6 +328,13 @@ export function useSpeechToText({
               autoGainControl: true,
             },
           });
+
+          // A stop/cancel landed while we were waiting on the mic. This stream
+          // is orphaned — close it rather than starting recognition on it.
+          if (sessionEpochRef.current !== epoch) {
+            micStream.getTracks().forEach((track) => track.stop());
+            return;
+          }
         }
 
         activeStreamRef.current = micStream;
@@ -362,6 +376,7 @@ export function useSpeechToText({
     intentionalStopRef.current = false;
     pausedRef.current = false;
     accumulatedTranscriptRef.current = '';
+    sessionEpochRef.current += 1;
     await startRecognition();
   }, [startRecognition]);
 
@@ -370,6 +385,7 @@ export function useSpeechToText({
     pausedRef.current = true;
     intentionalStopRef.current = true;
     recognitionActiveRef.current = false;
+    sessionEpochRef.current += 1;
     clearSilenceTimer();
     clearRestartTimer();
     accumulatedTranscriptRef.current = '';
@@ -396,6 +412,7 @@ export function useSpeechToText({
   const resume = useCallback(async () => {
     if (!pausedRef.current) return;
 
+    const epoch = sessionEpochRef.current;
     pausedRef.current = false;
     intentionalStopRef.current = false;
     recognitionActiveRef.current = false;
@@ -410,12 +427,15 @@ export function useSpeechToText({
 
     // Brief delay helps Chrome restart recognition reliably after pause.
     await new Promise((resolve) => setTimeout(resolve, 150));
+    // Cancelled/stopped during the delay — do not resurrect the session.
+    if (sessionEpochRef.current !== epoch) return;
     await startRecognition(activeStreamRef.current ?? undefined);
   }, [startRecognition]);
 
   const stop = useCallback(() => {
     intentionalStopRef.current = !continuousListenRef.current;
     recognitionActiveRef.current = false;
+    sessionEpochRef.current += 1;
     clearSilenceTimer();
     clearRestartTimer();
     if (recognitionRef.current) {
@@ -435,6 +455,7 @@ export function useSpeechToText({
     intentionalStopRef.current = true;
     pausedRef.current = false;
     recognitionActiveRef.current = false;
+    sessionEpochRef.current += 1;
     clearSilenceTimer();
     clearRestartTimer();
     if (recognitionRef.current) {
@@ -484,6 +505,7 @@ export function useSpeechToText({
     window.addEventListener('storage', handleStorageChange);
     return () => {
       window.removeEventListener('storage', handleStorageChange);
+      sessionEpochRef.current += 1;
       clearSilenceTimer();
       clearRestartTimer();
       intentionalStopRef.current = true;

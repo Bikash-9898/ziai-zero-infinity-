@@ -71,6 +71,7 @@ export interface AIModelRow {
   is_active: boolean;
   sort_order: number;
   tier: 'fast' | 'balanced' | 'flagship';
+  supports_images: boolean;
 }
 
 export type View = 'overview' | 'users' | 'api-keys' | 'settings';

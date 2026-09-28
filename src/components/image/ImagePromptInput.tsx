@@ -1,9 +1,9 @@
 // src/components/image/ImagePromptInput.tsx
 import { useState } from 'react';
-import { Zap } from 'lucide-react';
 import { useImageStore } from '@/store/useImageStore';
 import ImageModelSelector from './ImageModelSelector';
 import type { ImageModel } from '@/types/image';
+import { ShinyButton } from '@/components/ui/shiny-button';
 
 const STYLE_TAGS = ['Photorealistic', 'Cinematic', 'Anime', 'Oil Painting', '3D Render', 'Pixel Art'];
 
@@ -147,14 +147,14 @@ export default function ImagePromptInput() {
           <span className="text-[10px] font-mono text-slate-700">
             {selectedCredits} credit per generation
           </span>
-          <button
+          <ShinyButton
             onClick={() => void handleGenerate()}
             disabled={isGenerating || !prompt.trim()}
-            className="flex items-center gap-2 bg-linear-to-r from-purple-600 to-blue-500 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all"
+            highlightColor="#a78bfa"
+            className="inline-flex items-center gap-2 rounded-xl text-xs font-bold tracking-wide [--shiny-cta-padding:10px_20px] [--shiny-cta-font-size:12px] [--shiny-cta-bg:#7c3aed]"
           >
-            <Zap size={13} />
             {isGenerating ? 'GENERATING…' : 'GENERATE'}
-          </button>
+          </ShinyButton>
         </div>
       </div>
     </div>

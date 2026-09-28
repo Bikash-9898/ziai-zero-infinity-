@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Square, X, Trash2, Globe, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, Square, X, Trash2, AlertTriangle } from 'lucide-react';
 import { SpeechStatus } from '@/hooks/useSpeechToText';
 import AudioWaveform from './AudioWaveform';
-import { motion, AnimatePresence } from 'framer-motion';
 
+// Retained for the read-only badge in SpeechActivePanel. The picker that used
+// this list was removed; speech now always runs in the language persisted under
+// 'zi_speech_lang' (default 'en-US').
 export const SUPPORTED_LANGUAGES = [
   { code: 'en-US', label: 'English (US)' },
   { code: 'ne-NP', label: 'नेपाली (Nepal)' },
@@ -127,33 +128,15 @@ export function SpeechActivePanel({
 
 interface SpeechRecognitionToggleProps {
   status: SpeechStatus;
-  language: string;
-  onLanguageChange: (lang: string) => void;
   onStart: () => void;
   onStop: () => void;
 }
 
 export default function SpeechRecognitionToggle({
   status,
-  language,
-  onLanguageChange,
   onStart,
   onStop,
 }: SpeechRecognitionToggleProps) {
-  const [showSettings, setShowSettings] = useState(false);
-  const settingsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!showSettings) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
-        setShowSettings(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showSettings]);
-
   return (
     <div className="relative flex items-center shrink-0">
       <button
@@ -176,54 +159,6 @@ export default function SpeechRecognitionToggle({
       >
         {status === 'listening' ? <MicOff size={18} /> : <Mic size={18} />}
       </button>
-
-      <button
-        onClick={() => setShowSettings(!showSettings)}
-        type="button"
-        className="w-6 h-6 flex items-center justify-center rounded-full text-slate-500 hover:bg-white/5 hover:text-slate-300 transition-colors ml-0.5"
-        title="Voice Language Settings"
-        aria-label="Voice language settings"
-      >
-        <Globe size={13} />
-      </button>
-
-      <AnimatePresence>
-        {showSettings && (
-          <motion.div
-            ref={settingsRef}
-            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-            className="absolute bottom-full left-0 mb-2 w-44 rounded-xl bg-[#1c1c24] border border-white/10 p-1 shadow-2xl z-30"
-          >
-            <div className="px-2 py-1 text-[9px] font-bold text-slate-500 uppercase tracking-widest border-b border-white/5">
-              Speech Language
-            </div>
-            <div className="max-h-40 overflow-y-auto mt-1 custom-scrollbar">
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <button
-                  key={lang.code}
-                  type="button"
-                  onClick={() => {
-                    onLanguageChange(lang.code);
-                    setShowSettings(false);
-                  }}
-                  className={`w-full text-left px-2 py-1 rounded text-xs transition-colors flex items-center justify-between ${
-                    language === lang.code
-                      ? 'bg-purple-600/20 text-purple-400 font-semibold'
-                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <span>{lang.label}</span>
-                  {language === lang.code && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

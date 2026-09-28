@@ -4,7 +4,7 @@ import { Plus, Trash2, Save, Loader2 } from 'lucide-react';
 import { BASE_URL, ADMIN_SECRET_KEY } from '@/config';
 import type { AIModelRow } from '@/types/types';
 
-const PROVIDERS = ['huggingface', 'openai', 'anthropic'];
+const PROVIDERS = ['huggingface', 'openai', 'anthropic', 'google', 'nvidia'];
 const TIERS: AIModelRow['tier'][] = ['fast', 'balanced', 'flagship'];
 
 const EMPTY_FORM: AIModelRow = {
@@ -17,6 +17,7 @@ const EMPTY_FORM: AIModelRow = {
   is_active: true,
   sort_order: 0,
   tier: 'balanced',
+  supports_images: false,
 };
 
 async function apiCall(path: string, options: RequestInit = {}) {
@@ -82,6 +83,7 @@ export default function AdminModelRegistry() {
             is_active: form.is_active,
             sort_order: form.sort_order,
             tier: form.tier,
+            supports_images: form.supports_images,
           }),
         });
       } else {
@@ -212,6 +214,42 @@ export default function AdminModelRegistry() {
               {TIERS.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           </Field>
+          <Field label="Supports Image Input">
+            <div className="flex items-center gap-3 h-[38px]">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, supports_images: !form.supports_images })}
+                className={`relative w-10 h-5 rounded-full transition-colors ${
+                  form.supports_images ? 'bg-indigo-500' : 'bg-slate-700'
+                }`}
+              >
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                  form.supports_images ? 'translate-x-5' : 'translate-x-0.5'
+                }`} />
+              </button>
+              <span className="text-xs text-slate-400">
+                {form.supports_images ? 'Yes — images sent as vision blocks' : 'No — images dropped with notice'}
+              </span>
+            </div>
+          </Field>
+          <Field label="Status">
+            <div className="flex items-center gap-3 h-[38px]">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, is_active: !form.is_active })}
+                className={`relative w-10 h-5 rounded-full transition-colors ${
+                  form.is_active ? 'bg-emerald-500' : 'bg-slate-700'
+                }`}
+              >
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                  form.is_active ? 'translate-x-5' : 'translate-x-0.5'
+                }`} />
+              </button>
+              <span className="text-xs text-slate-400">
+                {form.is_active ? 'Active — visible in chat dropdown' : 'Inactive — hidden from all users'}
+              </span>
+            </div>
+          </Field>
           <div className="flex items-end gap-2">
             <button
               onClick={save}
@@ -240,6 +278,7 @@ export default function AdminModelRegistry() {
               <th className="py-2 pr-3 font-semibold">Input $/1M</th>
               <th className="py-2 pr-3 font-semibold">Output $/1M</th>
               <th className="py-2 pr-3 font-semibold">Tier</th>
+              <th className="py-2 pr-3 font-semibold">Vision</th>
               <th className="py-2 pr-3 font-semibold">Status</th>
               <th className="py-2 pr-3 font-semibold text-right">Actions</th>
             </tr>
@@ -261,6 +300,15 @@ export default function AdminModelRegistry() {
                                              'bg-blue-500/10 text-blue-300'
                   }`}>
                     {m.tier}
+                  </span>
+                </td>
+                <td className="py-3 pr-3">
+                  <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                    m.supports_images
+                      ? 'bg-amber-500/10 text-amber-300'
+                      : 'bg-slate-700/30 text-slate-500'
+                  }`}>
+                    {m.supports_images ? 'Yes' : 'No'}
                   </span>
                 </td>
                 <td className="py-3 pr-3">
